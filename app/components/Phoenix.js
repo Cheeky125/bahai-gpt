@@ -46,14 +46,15 @@ function sourceLine(r) {
   return parts.join(", ") + (r.para ? ` ¶${r.para}` : "");
 }
 
-function Card({ r }) {
+function Card({ r, n }) {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
     const txt = `“${r.text}”\n— ${r.author || "Compilation"}, ${sourceLine(r)}${r.onBehalf ? " (letter written on behalf)" : ""}\n${r.url}`;
     try { await navigator.clipboard.writeText(txt); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch (e) {}
   };
   return (
-    <article className="card">
+    <article className="card" id={`p${n}`}>
+      <span className="num" aria-hidden="true">{n}</span>
       <blockquote className="quote">{r.text}</blockquote>
       <div className="meta">
         <div>
@@ -99,7 +100,7 @@ export default function Phoenix() {
       const r = await fetch("/api/search", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ q: text, author: who }) });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || "Search failed");
-      setState({ status: "done", results: j.results || [], error: null, query: text });
+      setState({ status: "done", results: j.results || [], answer: j.answer || null, error: null, query: text });
     } catch (e) {
       setState({ status: "error", results: [], error: e.message, query: text });
     }
@@ -188,14 +189,31 @@ export default function Phoenix() {
         )}
         {status === "done" && results.length > 0 && (
           <>
+            {state.answer && <Answer text={state.answer} onCite={(n) => { if (n > shown) setShown(results.length); setTimeout(() => document.getElementById(`p${n}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 50); }} />}
             <p className="note">Passages{author ? ` from ${author}` : " from the Writings"} related to “{query}”, shown exactly as published.</p>
-            {results.slice(0, shown).map((r) => <Card key={r.id} r={r} />)}
+            {results.slice(0, shown).map((r, i) => <Card key={r.id} r={r} n={i + 1} />)}
             {shown < results.length && <button className="act more" onClick={() => setShown(results.length)}>Show {results.length - shown} more</button>}
           </>
         )}
       </main>
       <Footer />
     </>
+  );
+}
+
+function Answer({ text, onCite }) {
+  const parts = text.split(/(\[\d+\])/g);
+  return (
+    <section className="answer" aria-label="Quick answer">
+      <div className="answer-label">Quick answer</div>
+      <p className="answer-text">
+        {parts.map((p, i) => {
+          const m = p.match(/^\[(\d+)\]$/);
+          return m ? <button key={i} className="cite" onClick={() => onCite(+m[1])} aria-label={`Go to passage ${m[1]}`}>{m[1]}</button> : <span key={i}>{p}</span>;
+        })}
+      </p>
+      <div className="answer-note">Written by AI using only the passages below. Always check the passages themselves.</div>
+    </section>
   );
 }
 

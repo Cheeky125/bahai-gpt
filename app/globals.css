@@ -82,3 +82,10 @@ button { font-family: inherit; }
   .header.bar .hsearch { order: 3; flex-basis: 100%; max-width: none; }
   .header { padding: 12px 16px; gap: 12px; }
 }
+.card { position: relative; scroll-margin-top: 16px; }
+.num { position: absolute; top: 14px; right: 16px; font-size: 12px; font-weight: 600; color: var(--faint); }
+.answer { border: 1px solid var(--accent); background: var(--accentSoft); border-radius: 16px; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; }
+.answer-label { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accentText); }
+.answer-text { margin: 0; font-size: 17px; line-height: 1.6; color: var(--text); }
+.answer-note { font-size: 12px; color: var(--muted); }
+.cite { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 6px; margin: 0 2px; border-radius: 6px; border: 0; background: var(--accent); color: var(--onAccent); font-size: 12px; font-weight: 600; cursor: pointer; vertical-align: 2px; }

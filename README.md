@@ -12,3 +12,4 @@ Phoenix is an independent study tool, not an official publication of any Bahá�
 - `SUPABASE_URL`
 - `SUPABASE_PUBLISHABLE_KEY`
 - `VOYAGE_API_KEY`
+- `ANTHROPIC_API_KEY` (optional — smarter search wording + short cited answers to fact questions)
