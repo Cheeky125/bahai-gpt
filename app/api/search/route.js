@@ -33,6 +33,7 @@ async function claude(system, user, maxTokens = 400) {
   });
   if (!r.ok) { console.error("claude", r.status, (await r.text()).slice(0, 300)); return null; }
   const j = await r.json();
+  if (j.stop_reason === "max_tokens") console.error("claude output cut off", j.usage);
   return (j.content || []).map((c) => c.text || "").join("").trim();
 }
 
@@ -50,7 +51,7 @@ type "fact" = a question with a short factual answer (who, when, where, how old,
 
 async function plan(q) {
   const fallback = { type: /\bprayers?\b/i.test(q) ? "prayer" : "topic", queries: [], prayers_only: /\bprayers?\b/i.test(q) };
-  const out = parseJson(await claude(PLAN_SYSTEM, q, 250));
+  const out = parseJson(await claude(PLAN_SYSTEM, q, 1500));
   if (!out) return fallback;
   return {
     type: ["fact", "topic", "prayer", "quote"].includes(out.type) ? out.type : "topic",
@@ -113,7 +114,7 @@ const ANSWER_SYSTEM = `You answer short factual questions about the Bahá'í Fai
 async function answer(q, results) {
   if (!results.length) return null;
   const ctx = results.slice(0, 8).map((r, i) => `[${i + 1}] ${r.author || "Compilation"}, ${r.book}${r.section ? ", " + r.section : ""}:\n${r.text.slice(0, 1500)}`).join("\n\n");
-  const out = await claude(ANSWER_SYSTEM, `Question: ${q}\n\nPassages:\n${ctx}`, 300);
+  const out = await claude(ANSWER_SYSTEM, `Question: ${q}\n\nPassages:\n${ctx}`, 2000);
   if (!out || /^NONE\b/.test(out)) return null;
   return out;
 }
