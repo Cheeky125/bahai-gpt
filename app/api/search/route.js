@@ -6,6 +6,8 @@
 // 4. (optional) For fact questions, Claude writes a 1–2 sentence answer using ONLY the passages found,
 //    citing them by number. Passages themselves are always shown verbatim.
 
+import { matchFact } from "./facts";
+
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
@@ -84,6 +86,17 @@ async function search(q, emb, author, kind, count) {
   return r.json();
 }
 
+async function byIds(ids) {
+  const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+  const headers = { apikey: key };
+  if (key && key.startsWith("eyJ")) headers.Authorization = `Bearer ${key}`;
+  const cols = "id,book,author,section,para,citation,on_behalf,url,text,kind";
+  const r = await fetch(`${process.env.SUPABASE_URL}/rest/v1/passages?select=${cols}&id=in.(${ids.map(encodeURIComponent).join(",")})`, { headers });
+  if (!r.ok) throw new Error(`fact lookup failed (${r.status})`);
+  const rows = await r.json();
+  return ids.map((id) => rows.find((x) => x.id === id)).filter(Boolean);
+}
+
 const norm = (t) => t.toLowerCase().replace(/[^a-zÀ-ɏ]+/g, " ").trim().slice(0, 140);
 
 function merge(lists) {
@@ -119,6 +132,11 @@ async function answer(q, results) {
   return out;
 }
 
+const shape = (r) => ({
+  id: r.id, author: r.author, book: r.book, section: r.section, para: r.para,
+  citation: r.citation, onBehalf: r.on_behalf, url: r.url, text: r.text, kind: r.kind,
+});
+
 export async function POST(req) {
   try {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
@@ -127,6 +145,20 @@ export async function POST(req) {
     const q = String(body.q || "").trim().slice(0, 300);
     const author = AUTHORS.has(body.author) ? body.author : null;
     if (q.length < 2) return Response.json({ results: [] });
+
+    // Quick facts: hand-checked answers to common basics — instant, no AI needed.
+    const fact = author ? null : matchFact(q);
+    if (fact) {
+      const [factRows, [emb]] = await Promise.all([byIds(fact.ids), embed([q])]);
+      if (factRows.length === fact.ids.length) {
+        const more = await search(q, emb, null, null, 15);
+        // keep the fact passages first, in order, so [1], [2]… line up
+        const seen = new Set(factRows.map((r) => norm(r.text)));
+        const rest = merge([more]).filter((r) => !fact.ids.includes(r.id) && !seen.has(norm(r.text)));
+        const results = [...factRows, ...rest].slice(0, 12).map(shape);
+        return Response.json({ results, answer: fact.answer, verified: true, type: "fact" });
+      }
+    }
 
     const p = await plan(q);
     const wordings = [q, ...p.queries.filter((x) => x.toLowerCase() !== q.toLowerCase())].slice(0, 3);
@@ -137,10 +169,7 @@ export async function POST(req) {
       lists = await Promise.all(wordings.map((w, i) => search(w, embs[i], author, null, 15)));
     }
     const merged = merge(lists).slice(0, 12);
-    const results = merged.map((r) => ({
-      id: r.id, author: r.author, book: r.book, section: r.section, para: r.para,
-      citation: r.citation, onBehalf: r.on_behalf, url: r.url, text: r.text, kind: r.kind,
-    }));
+    const results = merged.map(shape);
     const quick = p.type === "fact" ? await answer(q, results) : null;
     return Response.json({ results, answer: quick, type: p.type });
   } catch (e) {
