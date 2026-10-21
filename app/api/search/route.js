@@ -29,7 +29,7 @@ async function claude(system, user, maxTokens = 400) {
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, temperature: 0, system, messages: [{ role: "user", content: user }] }),
+    body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, system, messages: [{ role: "user", content: user }] }),
   });
   if (!r.ok) { console.error("claude", r.status, (await r.text()).slice(0, 300)); return null; }
   const j = await r.json();
