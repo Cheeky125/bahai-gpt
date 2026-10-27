@@ -37,6 +37,51 @@ function SongCard({ sg, label }) {
 
 const SONG_TAGS = ["Prayer", "Hidden Word", "Quotation", "Children's Class", "Song"];
 
+// Devotional settings: how many of each part. Remembered on this device.
+const PARTS = [
+  { key: "prayers", label: "Prayers", max: 12 },
+  { key: "readings", label: "Readings", max: 10, hint: "from Bahá’u’lláh, the Báb and ‘Abdu’l-Bahá" },
+  { key: "stories", label: "Stories", max: 3 },
+  { key: "songs", label: "Songs", max: 3 },
+];
+const PRESETS = [
+  { name: "Classic", counts: { prayers: 2, readings: 2, stories: 1, songs: 1 } },
+  { name: "Prayers only", counts: { prayers: 6, readings: 0, stories: 0, songs: 0 } },
+  { name: "Short", counts: { prayers: 2, readings: 1, stories: 0, songs: 0 } },
+  { name: "With music", counts: { prayers: 2, readings: 2, stories: 0, songs: 3 } },
+  { name: "Story time", counts: { prayers: 2, readings: 1, stories: 2, songs: 1 } },
+];
+const DEFAULT_COUNTS = PRESETS[0].counts;
+const same = (a, b) => PARTS.every((p) => a[p.key] === b[p.key]);
+
+function Settings({ counts, setCounts }) {
+  const set = (k, v) => setCounts({ ...counts, [k]: v });
+  return (
+    <details className="settings">
+      <summary>
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" /></svg>
+        Customize · {PARTS.filter((p) => counts[p.key]).map((p) => `${counts[p.key]} ${counts[p.key] === 1 ? p.label.toLowerCase().replace(/s$/, "") : p.label.toLowerCase()}`).join(", ") || "nothing yet"}
+      </summary>
+      <div className="settingsbody">
+        <div className="chips left" role="group" aria-label="Presets">
+          {PRESETS.map((pr) => <button key={pr.name} type="button" className="chip" aria-pressed={same(counts, pr.counts)} onClick={() => setCounts(pr.counts)}>{pr.name}</button>)}
+        </div>
+        {PARTS.map((p) => (
+          <div key={p.key} className="stepper">
+            <div><div className="steplabel">{p.label}</div>{p.hint && <div className="cit">{p.hint}</div>}</div>
+            <div className="stepctl">
+              <button type="button" className="iconbtn" aria-label={`Fewer ${p.label.toLowerCase()}`} disabled={counts[p.key] <= 0} onClick={() => set(p.key, counts[p.key] - 1)}>−</button>
+              <span className="stepval" aria-live="polite">{counts[p.key]}</span>
+              <button type="button" className="iconbtn" aria-label={`More ${p.label.toLowerCase()}`} disabled={counts[p.key] >= p.max} onClick={() => set(p.key, counts[p.key] + 1)}>+</button>
+            </div>
+          </div>
+        ))}
+        <p className="cit" style={{ margin: 0 }}>With two or more prayers, the first opens the devotional and the last closes it.</p>
+      </div>
+    </details>
+  );
+}
+
 function setParams(obj) {
   const u = new URL(window.location.href);
   u.search = "";
@@ -54,6 +99,11 @@ export default function Prayers({ groups }) {
   const [devTheme, setDevTheme] = useState("");
   const [devo, setDevo] = useState({ status: "idle" });
   const [seed, setSeed] = useState(0);
+  const [counts, setCountsState] = useState(DEFAULT_COUNTS);
+  useEffect(() => {
+    try { const c = JSON.parse(localStorage.getItem("phoenix-devo-counts") || "null"); if (c && PARTS.every((p) => Number.isInteger(c[p.key]))) setCountsState(c); } catch {}
+  }, []);
+  const setCounts = (c) => { setCountsState(c); try { localStorage.setItem("phoenix-devo-counts", JSON.stringify(c)); } catch {} };
   const [copied, setCopied] = useState(false);
   const [limit, setLimit] = useState(25);
   const [stories, setStories] = useState({ status: "idle", list: [] });
@@ -91,14 +141,15 @@ export default function Prayers({ groups }) {
     } catch (e) { setFound({ status: "error", results: [], query: t, error: e.message }); }
   };
 
-  const build = async (text, s = 0, push = true) => {
+  const build = async (text, s = 0, push = true, useCounts = counts) => {
     const t = text.trim();
     if (t.length < 2) return;
+    if (PARTS.every((p) => !useCounts[p.key])) { setTab("devotional"); setDevo({ status: "error", error: "Choose at least one prayer, reading, story or song in Customize." }); return; }
     setTab("devotional"); setDevTheme(t); setSeed(s); setCopied(false);
     if (push) setParams({ devotional: t });
     setDevo({ status: "loading" });
     try {
-      const r = await fetch("/api/devotional", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ theme: t, seed: s }) });
+      const r = await fetch("/api/devotional", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ theme: t, seed: s, counts: useCounts }) });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || "Something went wrong");
       setDevo({ status: "done", ...j });
@@ -177,10 +228,9 @@ export default function Prayers({ groups }) {
   const backToThemes = () => { setTheme(null); setFound({ status: "idle", results: [], query: "" }); setQ(""); setParams({}); };
 
   const copyDevotional = async () => {
-    const part = (label, r) => r ? `${label}\n“${r.text}”\n— ${r.author}, ${r.book}${r.section ? ", " + r.section : ""}\n` : "";
-    const [r1, r2] = devo.readings || [];
-    const song = devo.song ? `A song\n${devo.song.title}${devo.song.by ? " — " + devo.song.by : ""}\nLyrics & chords: ${devo.song.url}\n` : "";
-    const txt = [`Devotional: ${devo.theme}\n`, part("Opening prayer", devo.opening), part("Reading", r1), part("A story", devo.story), song, part("Reading", r2), part("Closing prayer", devo.closing)].join("\n");
+    const part = (label, r) => `${label}\n“${r.text}”\n— ${r.author}, ${r.book}${r.section ? ", " + r.section : ""}\n`;
+    const song = (sg) => `A song\n${sg.title}${sg.by ? " — " + sg.by : ""}\nLyrics & chords: ${sg.url}\n`;
+    const txt = [`Devotional: ${devo.theme}\n`, ...(devo.items || []).map((it) => it.song ? song(it.song) : part(it.label, it.card))].join("\n");
     try { await navigator.clipboard.writeText(txt.trim()); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch {}
   };
 
@@ -368,8 +418,12 @@ export default function Prayers({ groups }) {
           <div className="chips left" role="group" aria-label="Suggested themes">
             {DEVO_THEMES.map((t) => <button key={t} className="chip" aria-pressed={devo.theme === t} onClick={() => build(t, 0)}>{t}</button>)}
           </div>
+          <Settings counts={counts} setCounts={setCounts} />
+          {devo.status === "done" && !same(counts, devo.counts || counts) && (
+            <button className="act primary" style={{ alignSelf: "flex-start" }} onClick={() => build(devo.theme, 0, false)}>Rebuild “{devo.theme}” with these settings</button>
+          )}
 
-          {devo.status === "idle" && <p className="note">Pick a theme and Phoenix will put together an opening prayer, readings from the Writings of Bahá’u’lláh, the Báb and ‘Abdu’l-Bahá, a story of the early believers, a song to sing together, and a closing prayer.</p>}
+          {devo.status === "idle" && <p className="note">Pick a theme and Phoenix will put together an opening prayer, readings from the Writings of Bahá’u’lláh, the Báb and ‘Abdu’l-Bahá, a story of the early believers, a song to sing together, and a closing prayer. Tap <strong>Customize</strong> to choose how many of each — or just prayers.</p>}
           {devo.status === "loading" && <><p className="note">Gathering prayers and readings…</p><div className="skeleton" /><div className="skeleton" /><div className="skeleton" /></>}
           {devo.status === "error" && <p className="empty">{devo.error}</p>}
           {devo.status === "done" && (
@@ -378,12 +432,10 @@ export default function Prayers({ groups }) {
                 <button className="act primary" onClick={copyDevotional}>{copied ? "Copied" : "Copy whole devotional"}</button>
                 <button className="act" onClick={() => build(devo.theme, seed + 1, false)}>Shuffle</button>
               </div>
-              {devo.opening && <Card r={devo.opening} label="Opening prayer" />}
-              {devo.readings?.[0] && <Card r={devo.readings[0]} label="Reading" />}
-              {devo.story && <Card r={devo.story} label="A story" />}
-              {devo.song && <SongCard sg={devo.song} label="A song" />}
-              {devo.readings?.[1] && <Card r={devo.readings[1]} label="Reading" />}
-              {devo.closing && <Card r={devo.closing} label="Closing prayer" />}
+              {devo.short?.length > 0 && <p className="note">Phoenix found {devo.short.join(" and ")} on “{devo.theme}”. Try a broader theme for more.</p>}
+              {(devo.items || []).map((it, i) => it.song
+                ? <SongCard key={`s${i}`} sg={it.song} label={it.label} />
+                : <Card key={`${it.card.id}-${i}`} r={it.card} label={it.label} />)}
             </div>
           )}
         </section>
