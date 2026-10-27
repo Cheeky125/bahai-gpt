@@ -164,6 +164,11 @@ export default function Phoenix() {
               {THEMES.map((t) => <button key={t} className="theme" onClick={() => run(t)}>{t}</button>)}
             </div>
           </div>
+          <div className="homelinks">
+            <a href="/prayers">Prayers, stories &amp; songs →</a>
+            <a href="/prayers?tab=devotional">Build a devotional →</a>
+            <a href="/institute">Studying a Ruhi book? →</a>
+          </div>
         </main>
         <Footer />
       </>
@@ -226,7 +231,7 @@ export function Footer() {
   return (
     <footer className="footer">
       An independent study tool, not an official publication of any Bahá’í institution.
-      Texts from the <a href="https://www.bahai.org/library/" target="_blank" rel="noopener noreferrer">Bahá’í Reference Library</a>. · <a href="/about">About Phoenix</a>
+      Texts from the <a href="https://www.bahai.org/library/" target="_blank" rel="noopener noreferrer">Bahá’í Reference Library</a>. · <a href="/institute">Institute companion</a> · <a href="/about">About Phoenix</a>
     </footer>
   );
 }

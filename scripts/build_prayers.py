@@ -104,3 +104,15 @@ for p in prayers:
 json.dump(out, open(OUT, "w"), ensure_ascii=False)
 print(len(out), "prayers", file=sys.stderr)
 for k, n in Counter(p["theme"] for p in out if p["group"] == "More Prayer Books").items(): print(" ", n, k, file=sys.stderr)
+
+# ---- themes for the extra prayer books (computed once by meaning; see scripts/prayer_themes.json) ----
+import os
+tp = os.path.join(os.path.dirname(__file__), "prayer_themes.json")
+if os.path.exists(tp):
+    m = json.load(open(tp))
+    P = json.load(open(OUT))
+    for p in P:
+        v = m.get(p["id"])
+        if v == "D": p["dup"] = True
+        elif v and not (v == "Women" and p["author"] == "Bahá’u’lláh"): p["alsoTheme"] = v
+    json.dump(P, open(OUT, "w"), ensure_ascii=False)

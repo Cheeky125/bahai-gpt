@@ -16,6 +16,11 @@ export default function PrayersPage() {
     if (!t) g.themes.push((t = { name: p.theme, count: 0 }));
     t.count++;
   }
+  // Count the matching prayers from the other prayer books on each theme too.
+  for (const p of PRAYERS) {
+    if (!p.alsoTheme || p.dup) continue;
+    for (const g of groups) { const t = g.themes.find((x) => x.name === p.alsoTheme); if (t) t.count++; }
+  }
   // Show everyday prayers first.
   const order = ["General Prayers", "Obligatory Prayers", "Occasional Prayers", "Special Tablets", "More Prayer Books"];
   groups.sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name));

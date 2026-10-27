@@ -254,7 +254,12 @@ export default function Prayers({ groups }) {
               )}
               {list.status === "loading" && <><div className="skeleton" /><div className="skeleton" /></>}
               {list.status === "error" && <p className="empty">Couldn’t load these prayers. Please try again.</p>}
-              {list.status === "done" && shownPrayers.slice(0, limit).map((r) => <Card key={r.id} r={r} />)}
+              {list.status === "done" && shownPrayers.slice(0, limit).map((r, i, arr) => (
+                <div key={r.id} style={{ display: "contents" }}>
+                  {r.related && !arr[i - 1]?.related && <h3 className="label" style={{ margin: "12px 0 0" }}>From other prayer books</h3>}
+                  <Card r={r} />
+                </div>
+              ))}
               {list.status === "done" && shownPrayers.length > limit && <button className="act more" onClick={() => setLimit(limit + 25)}>Show more prayers ({shownPrayers.length - limit} left)</button>}
             </>
           )}

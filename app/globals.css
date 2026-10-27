@@ -133,3 +133,25 @@ button { font-family: inherit; }
   .installtxt { font-size: 12px; }
   .nav a[href="/about"] { display: none; }
 }
+
+/* Institute companion */
+.books { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.book { border: 1px solid var(--border); background: var(--surface); border-radius: 16px; overflow: hidden; }
+.book summary { list-style: none; cursor: pointer; padding: 16px 18px; display: flex; flex-direction: column; gap: 2px; min-height: 48px; }
+.book summary::-webkit-details-marker { display: none; }
+.book summary::after { content: "+"; position: absolute; right: 18px; }
+.book { position: relative; }
+.book summary { position: relative; padding-right: 44px; }
+.book summary::after { top: 50%; transform: translateY(-50%); font-size: 22px; color: var(--faint); }
+.book[open] summary::after { content: "–"; }
+.booknum { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accentText); }
+.booktitle { font-family: var(--font-serif), Georgia, serif; font-size: 20px; line-height: 1.3; }
+.bookbody { padding: 4px 18px 18px; display: flex; flex-direction: column; gap: 16px; border-top: 1px solid var(--divider); padding-top: 16px; }
+.unit { display: flex; flex-direction: column; gap: 10px; }
+.unittitle { font-size: 15px; font-weight: 600; }
+.unitnum { color: var(--faint); font-weight: 500; margin-right: 4px; }
+.themes.left { justify-content: flex-start; }
+a.theme { text-decoration: none; display: inline-flex; align-items: center; min-height: 40px; }
+.laterbooks { padding: 8px 2px; display: flex; flex-direction: column; gap: 6px; }
+.homelinks { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; font-size: 14px; }
+.homelinks a { color: var(--accent); text-decoration: none; padding: 8px 4px; }
