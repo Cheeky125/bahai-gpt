@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import Logo from "./Logo";
 import Install from "./Install";
+import Feedback from "./Feedback";
 
 const AUTHORS = [
   ["", "All authors"],
@@ -211,6 +212,7 @@ export default function Phoenix() {
             <p className="note">{state.ruhiBook ? <>Passages quoted in <a href="/institute">Ruhi Book {state.ruhiBook}</a> related to “{query}”, shown exactly as published.</> : <>Passages{author ? ` from ${author}` : " from the Writings"} related to “{query}”, shown exactly as published.</>}</p>
             {results.slice(0, shown).map((r, i) => <Card key={r.id} r={r} n={i + 1} />)}
             {shown < results.length && <button className="act more" onClick={() => setShown(results.length)}>Show {results.length - shown} more</button>}
+            <Feedback query={query} label="Not what you were looking for? Tell us" />
           </>
         )}
       </main>
@@ -238,6 +240,7 @@ function Answer({ text, verified, onCite }) {
 export function Footer() {
   return (
     <footer className="footer">
+      <div style={{ marginBottom: 12 }}><Feedback /></div>
       An independent study tool, not an official publication of any Bahá’í institution.
       Texts from the <a href="https://www.bahai.org/library/" target="_blank" rel="noopener noreferrer">Bahá’í Reference Library</a>. · <a href="/institute">Institute companion</a> · <a href="/about">About Phoenix</a>
     </footer>

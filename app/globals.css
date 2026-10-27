@@ -171,3 +171,11 @@ a.theme { text-decoration: none; display: inline-flex; align-items: center; min-
 .stepctl .iconbtn { font-size: 20px; line-height: 1; }
 .stepctl .iconbtn:disabled { opacity: .35; cursor: default; }
 .stepval { min-width: 24px; text-align: center; font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Feedback */
+.fbbtn { align-self: center; background: none; border: 1px dashed var(--border2); color: var(--muted); border-radius: 999px; padding: 8px 16px; min-height: 40px; font-size: 13px; cursor: pointer; }
+.fbbtn:hover { color: var(--accent); border-color: var(--accent); }
+.fbform { width: 100%; display: flex; flex-direction: column; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; text-align: left; }
+.fbform textarea, .fbform input { width: 100%; font: inherit; font-size: 16px; color: var(--text); background: var(--bg); border: 1px solid var(--border2); border-radius: 10px; padding: 10px 12px; }
+.footer .fbbtn, .footer .fbform { margin: 0 auto 12px; max-width: 560px; display: flex; }
+.footer .fbbtn { display: inline-flex; }
