@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Logo from "./Logo";
+import Install from "./Install";
 
 const AUTHORS = [
   ["", "All authors"],
@@ -142,7 +143,7 @@ export default function Phoenix() {
       <>
         <header className="header">
           <button className="brand" onClick={home}><Logo id="h" />Phoenix</button>
-          <nav className="nav"><a href="/prayers">Prayers</a><a href="/about">About</a><ThemeToggle /></nav>
+          <nav className="nav"><Install /><a href="/prayers">Prayers</a><a href="/about">About</a><ThemeToggle /></nav>
         </header>
         <main className="hero">
           <Logo size={128} glow id="hero" />
@@ -182,7 +183,7 @@ export default function Phoenix() {
             <button className="go" type="submit" aria-label="Search" disabled={status === "loading"}><Arrow /></button>
           </div>
         </form>
-        <nav className="nav"><a href="/prayers">Prayers</a><a href="/about">About</a><ThemeToggle /></nav>
+        <nav className="nav"><Install /><a href="/prayers">Prayers</a><a href="/about">About</a><ThemeToggle /></nav>
       </header>
       <main className="results" aria-live="polite">
         {chips}
@@ -225,7 +226,7 @@ export function Footer() {
   return (
     <footer className="footer">
       An independent study tool, not an official publication of any Bahá’í institution.
-      Texts from the <a href="https://www.bahai.org/library/" target="_blank" rel="noopener noreferrer">Bahá’í Reference Library</a>.
+      Texts from the <a href="https://www.bahai.org/library/" target="_blank" rel="noopener noreferrer">Bahá’í Reference Library</a>. · <a href="/about">About Phoenix</a>
     </footer>
   );
 }
