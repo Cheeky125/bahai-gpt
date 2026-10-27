@@ -4,6 +4,7 @@ import MEMORIALS from "./stories.json";
 import DAWN from "./dawnbreakers.json";
 import SONGS from "./songs.json";
 import RUHI from "./ruhi.json";
+import HIDDEN_IDS from "./hidden.json";
 
 export const MODEL = "claude-haiku-5-5";
 export const AUTHORS = new Set(["Bahá’u’lláh", "The Báb", "‘Abdu’l-Bahá", "Shoghi Effendi", "The Universal House of Justice"]);
@@ -150,6 +151,10 @@ function sbHeaders(json) {
   return headers;
 }
 
+// Lines that aren't passages — contents pages, lists of names, salutations, bare reference lines,
+// timelines — are kept in the library but never shown as search results (see scripts/find_hidden.py).
+const HIDDEN = new Set(HIDDEN_IDS);
+
 export async function search(q, emb, author, kind, count) {
   const r = await fetch(`${process.env.SUPABASE_URL}/rest/v1/rpc/search_passages`, {
     method: "POST",
@@ -157,7 +162,7 @@ export async function search(q, emb, author, kind, count) {
     body: JSON.stringify({ query_text: q, query_embedding: `[${emb.join(",")}]`, match_count: count, author_filter: author || null, kind_filter: kind || null }),
   });
   if (!r.ok) throw new Error(`search failed (${r.status}): ${(await r.text()).slice(0, 200)}`);
-  return r.json();
+  return (await r.json()).filter((row) => !HIDDEN.has(row.id));
 }
 
 export async function byIds(ids) {
