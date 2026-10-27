@@ -89,3 +89,25 @@ button { font-family: inherit; }
 .answer-text { margin: 0; font-size: 17px; line-height: 1.6; color: var(--text); }
 .answer-note { font-size: 12px; color: var(--muted); }
 .cite { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 6px; margin: 0 2px; border-radius: 6px; border: 0; background: var(--accent); color: var(--onAccent); font-size: 12px; font-weight: 600; cursor: pointer; vertical-align: 2px; }
+.quote.clipped { max-height: 15.5em; overflow: hidden; -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent); }
+.act.more.inline { align-self: flex-start; margin-top: -6px; }
+.cardlabel { margin-bottom: -6px; color: var(--accentText); }
+
+/* Prayers page */
+.ptop { width: 100%; max-width: 760px; margin: 0 auto; padding: 32px 16px 8px; display: flex; flex-direction: column; gap: 14px; }
+.ptop h1 { margin: 0; font-family: var(--font-serif), Georgia, serif; font-weight: 400; font-size: clamp(30px, 5vw, 40px); letter-spacing: -0.02em; }
+.ptop p { margin: 0; color: var(--muted); line-height: 1.55; }
+.tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 14px; background: var(--chip); align-self: flex-start; }
+.tab { border: 0; background: transparent; color: var(--chipText); font-size: 14px; font-weight: 500; padding: 10px 16px; min-height: 40px; border-radius: 10px; cursor: pointer; }
+.tab[aria-selected="true"] { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(20,20,19,.08); }
+.groups { display: flex; flex-direction: column; gap: 18px; }
+.group h2 { margin: 0 0 10px; }
+.tgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
+.tcard { text-align: left; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 12px; padding: 12px 14px; cursor: pointer; font-size: 15px; display: flex; justify-content: space-between; gap: 8px; align-items: center; min-height: 48px; }
+.tcard:hover { border-color: var(--accent); }
+.tcard .count { font-size: 12px; color: var(--faint); }
+.back { align-self: flex-start; background: none; border: 0; color: var(--accent); cursor: pointer; font-size: 14px; padding: 8px 0; display: flex; gap: 6px; align-items: center; }
+.dsec { display: flex; flex-direction: column; gap: 12px; }
+.dbar { display: flex; gap: 8px; flex-wrap: wrap; }
+.act.primary { background: var(--accent); color: var(--onAccent); border-color: var(--accent); font-weight: 600; }
+.act:disabled { opacity: .6; cursor: default; }

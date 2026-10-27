@@ -12,14 +12,14 @@ const AUTHORS = [
 ];
 const THEMES = ["Unity of mankind", "Science and religion", "Justice", "Service to others", "Prayers for healing", "Education of children"];
 
-function Arrow() {
+export function Arrow() {
   return <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m13 6 6 6-6 6" /></svg>;
 }
-function Glass() {
+export function Glass() {
   return <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--faint)", flex: "none" }}><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>;
 }
 
-function ThemeToggle() {
+export function ThemeToggle() {
   const [dark, setDark] = useState(false);
   useEffect(() => {
     const t = document.documentElement.dataset.theme;
@@ -46,16 +46,20 @@ function sourceLine(r) {
   return parts.join(", ") + (r.para ? ` ¶${r.para}` : "");
 }
 
-function Card({ r, n }) {
+export function Card({ r, n, label }) {
   const [copied, setCopied] = useState(false);
+  const long = r.text.length > 1100;
+  const [open, setOpen] = useState(!long);
   const copy = async () => {
     const txt = `“${r.text}”\n— ${r.author || "Compilation"}, ${sourceLine(r)}${r.onBehalf ? " (letter written on behalf)" : ""}\n${r.url}`;
     try { await navigator.clipboard.writeText(txt); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch (e) {}
   };
   return (
     <article className="card" id={`p${n}`}>
-      <span className="num" aria-hidden="true">{n}</span>
-      <blockquote className="quote">{r.text}</blockquote>
+      {n != null && <span className="num" aria-hidden="true">{n}</span>}
+      {label && <div className="label cardlabel">{label}</div>}
+      <blockquote className={`quote${open ? "" : " clipped"}`}>{r.text}</blockquote>
+      {long && <button className="act more inline" onClick={() => setOpen(!open)} aria-expanded={open}>{open ? "Show less" : r.prayer ? "Show full prayer" : "Show full passage"}</button>}
       <div className="meta">
         <div>
           <div className="who">{r.author || "Compilation"}{r.onBehalf ? " (written on behalf)" : ""}</div>
@@ -138,7 +142,7 @@ export default function Phoenix() {
       <>
         <header className="header">
           <button className="brand" onClick={home}><Logo id="h" />Phoenix</button>
-          <nav className="nav"><a href="/about">About</a><ThemeToggle /></nav>
+          <nav className="nav"><a href="/prayers">Prayers</a><a href="/about">About</a><ThemeToggle /></nav>
         </header>
         <main className="hero">
           <Logo size={128} glow id="hero" />
@@ -178,7 +182,7 @@ export default function Phoenix() {
             <button className="go" type="submit" aria-label="Search" disabled={status === "loading"}><Arrow /></button>
           </div>
         </form>
-        <nav className="nav"><a href="/about">About</a><ThemeToggle /></nav>
+        <nav className="nav"><a href="/prayers">Prayers</a><a href="/about">About</a><ThemeToggle /></nav>
       </header>
       <main className="results" aria-live="polite">
         {chips}
@@ -217,7 +221,7 @@ function Answer({ text, verified, onCite }) {
   );
 }
 
-function Footer() {
+export function Footer() {
   return (
     <footer className="footer">
       An independent study tool, not an official publication of any Bahá’í institution.
