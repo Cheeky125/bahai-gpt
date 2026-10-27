@@ -1,6 +1,7 @@
 // Phoenix — shared search engine pieces used by /api/search and /api/devotional.
 import PRAYERS from "./prayers.json";
 import STORIES from "./stories.json";
+import SONGS from "./songs.json";
 
 export const MODEL = "claude-haiku-5-5";
 export const AUTHORS = new Set(["Bahá’u’lláh", "The Báb", "‘Abdu’l-Bahá", "Shoghi Effendi", "The Universal House of Justice"]);
@@ -24,28 +25,46 @@ export function prayerCard(p) {
 export { STORIES };
 export const storyCard = (st) => ({ id: st.id, author: "‘Abdu’l-Bahá", book: "Memorials of the Faithful", section: `${st.n} — ${st.name}`, para: null, citation: null, onBehalf: false, url: st.url, text: st.text, kind: "writings", story: true });
 
-// Each story's meaning fingerprint is computed once per server and kept in memory.
-let storyVecs = null;
-async function storyVectors() {
-  if (!storyVecs) {
-    storyVecs = (async () => {
-      const r = await fetch("https://api.voyageai.com/v1/embeddings", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${process.env.VOYAGE_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ input: STORIES.map((st) => `${st.name}. ${st.text.slice(0, 6000)}`), model: "voyage-4", input_type: "document", output_dimension: 1024 }),
-      });
-      if (!r.ok) throw new Error(`story embedding failed (${r.status})`);
-      const j = await r.json();
-      return j.data.sort((a, b) => a.index - b.index).map((d) => d.embedding);
-    })().catch((e) => { storyVecs = null; throw e; });
+// Meaning fingerprints for stories and songs are computed once per server and kept in memory.
+const vecCache = new Map();
+function docVectors(key, texts) {
+  if (!vecCache.has(key)) {
+    const p = (async () => {
+      const out = [];
+      for (let i = 0; i < texts.length; i += 128) {
+        const r = await fetch("https://api.voyageai.com/v1/embeddings", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${process.env.VOYAGE_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ input: texts.slice(i, i + 128), model: "voyage-4", input_type: "document", output_dimension: 1024 }),
+        });
+        if (!r.ok) throw new Error(`embedding failed (${r.status})`);
+        const j = await r.json();
+        out.push(...j.data.sort((a, b) => a.index - b.index).map((d) => d.embedding));
+      }
+      return out;
+    })().catch((e) => { vecCache.delete(key); throw e; });
+    vecCache.set(key, p);
   }
-  return storyVecs;
+  return vecCache.get(key);
 }
+const storyVectors = () => docVectors("stories", STORIES.map((st) => `${st.name}. ${st.text.slice(0, 6000)}`));
 const dot = (a, b) => { let s = 0; for (let i = 0; i < a.length; i++) s += a[i] * b[i]; return s; };
 // Stories ranked by how close they are in meaning to a query embedding.
 export async function rankStories(queryVec) {
   const vecs = await storyVectors();
   return STORIES.map((st, i) => ({ st, score: dot(queryVec, vecs[i]) })).sort((a, b) => b.score - a.score).map((x) => x.st);
+}
+
+// ---------- songs (links to bahaisongproject.com — lyrics and chords stay on their site) ----------
+export { SONGS };
+export const songCard = (sg) => ({ slug: sg.slug, title: sg.title, by: sg.by, lang: sg.lang, tags: sg.tags, video: sg.video, url: sg.url, source: sg.source ? { book: sg.source.book, author: sg.source.author, url: sg.source.url } : null });
+const songVectors = () => docVectors("songs", SONGS.map((sg) => [sg.title, sg.tags.join(", "), sg.about || ""].join(". ")));
+// Songs ranked by meaning; English songs only unless `allLanguages`.
+export async function rankSongs(queryVec, allLanguages = false) {
+  const vecs = await songVectors();
+  return SONGS.map((sg, i) => ({ sg, score: dot(queryVec, vecs[i]) + (sg.video ? 0.01 : 0) }))
+    .filter((x) => allLanguages || x.sg.lang.includes("English"))
+    .sort((a, b) => b.score - a.score).map((x) => x.sg);
 }
 
 // ---------- rate limit ----------

@@ -2,8 +2,8 @@ import { PRAYERS } from "../lib/engine";
 import Prayers from "../components/Prayers";
 
 export const metadata = {
-  title: "Prayers, Stories & Devotionals — Phoenix",
-  description: "Browse Bahá’í prayers by theme, each shown in full, or build a devotional on any theme.",
+  title: "Prayers, Stories & Songs — Phoenix",
+  description: "Bahá’í prayers in full, stories of the early believers, songs to sing together, and a devotional builder.",
 };
 
 export default function PrayersPage() {

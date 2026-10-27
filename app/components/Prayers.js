@@ -14,6 +14,28 @@ function Header() {
   );
 }
 
+function SongCard({ sg, label }) {
+  return (
+    <article className="card song">
+      {label && <div className="label cardlabel">{label}</div>}
+      <div>
+        <h3 className="songtitle">{sg.title}</h3>
+        <div className="src">{[sg.by, sg.lang.join(" / ")].filter(Boolean).join(" · ")}</div>
+        {sg.source && <div className="cit">Words from <a href={sg.source.url} target="_blank" rel="noopener noreferrer">{sg.source.book}</a>{sg.source.author ? ` — ${sg.source.author}` : ""}</div>}
+      </div>
+      {sg.tags.length > 0 && <div className="minitags">{sg.tags.map((t) => <span key={t}>{t}</span>)}</div>}
+      <div className="actions">
+        <a className="act link" href={sg.url} target="_blank" rel="noopener noreferrer">
+          {sg.video ? "Lyrics, chords & video" : "Lyrics & chords"}
+          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M8 7h9v9" /></svg>
+        </a>
+      </div>
+    </article>
+  );
+}
+
+const SONG_TAGS = ["Prayer", "Hidden Word", "Quotation", "Children's Class", "Song"];
+
 function setParams(obj) {
   const u = new URL(window.location.href);
   u.search = "";
@@ -37,6 +59,11 @@ export default function Prayers({ groups }) {
   const [story, setStory] = useState({ status: "idle" });
   const [sq, setSq] = useState("");
   const [sFound, setSFound] = useState({ status: "idle", results: [], query: "" });
+  const [songs, setSongs] = useState({ status: "idle", list: [] });
+  const [gq, setGq] = useState("");
+  const [gFound, setGFound] = useState({ status: "idle", results: [], query: "" });
+  const [gLang, setGLang] = useState("English");
+  const [gTag, setGTag] = useState("");
 
   const openTheme = async (name, push = true) => {
     setTheme(name); setSub(""); setLimit(25); setFound({ status: "idle", results: [], query: "" });
@@ -106,6 +133,27 @@ export default function Prayers({ groups }) {
     } catch (e) { setSFound({ status: "error", results: [], query: t, error: e.message }); }
   };
 
+  const loadSongs = async () => {
+    if (songs.status !== "idle") return;
+    setSongs({ status: "loading", list: [] });
+    try { const j = await fetch("/api/songs").then((r) => r.json()); setSongs({ status: "done", list: j.songs || [] }); }
+    catch { setSongs({ status: "error", list: [] }); }
+  };
+  const openSongs = (push = true) => { setTab("songs"); setGFound({ status: "idle", results: [], query: "" }); loadSongs(); if (push) setParams({ tab: "songs" }); };
+  const findSong = async (text, push = true) => {
+    const t = text.trim();
+    if (t.length < 2) return;
+    setTab("songs"); setGq(t); loadSongs();
+    if (push) setParams({ findsong: t });
+    setGFound({ status: "loading", results: [], query: t });
+    try {
+      const r = await fetch("/api/songs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ q: t, all: gLang !== "English" }) });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || "Search failed");
+      setGFound({ status: "done", results: j.results || [], query: t });
+    } catch (e) { setGFound({ status: "error", results: [], query: t, error: e.message }); }
+  };
+
   useEffect(() => {
     const load = () => {
       const p = new URLSearchParams(window.location.search);
@@ -115,6 +163,8 @@ export default function Prayers({ groups }) {
       else if (p.get("story")) openStory(p.get("story"), false);
       else if (p.get("findstory")) findStory(p.get("findstory"), false);
       else if (p.get("tab") === "stories") openStories(false);
+      else if (p.get("findsong")) findSong(p.get("findsong"), false);
+      else if (p.get("tab") === "songs") openSongs(false);
       else { setTheme(null); setFound({ status: "idle", results: [], query: "" }); }
     };
     load();
@@ -128,7 +178,8 @@ export default function Prayers({ groups }) {
   const copyDevotional = async () => {
     const part = (label, r) => r ? `${label}\n“${r.text}”\n— ${r.author}, ${r.book}${r.section ? ", " + r.section : ""}\n` : "";
     const [r1, r2] = devo.readings || [];
-    const txt = [`Devotional: ${devo.theme}\n`, part("Opening prayer", devo.opening), part("Reading", r1), part("A story", devo.story), part("Reading", r2), part("Closing prayer", devo.closing)].join("\n");
+    const song = devo.song ? `A song\n${devo.song.title}${devo.song.by ? " — " + devo.song.by : ""}\nLyrics & chords: ${devo.song.url}\n` : "";
+    const txt = [`Devotional: ${devo.theme}\n`, part("Opening prayer", devo.opening), part("Reading", r1), part("A story", devo.story), song, part("Reading", r2), part("Closing prayer", devo.closing)].join("\n");
     try { await navigator.clipboard.writeText(txt.trim()); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch {}
   };
 
@@ -139,11 +190,12 @@ export default function Prayers({ groups }) {
     <>
       <Header />
       <main className="ptop">
-        <h1>Prayers, Stories &amp; Devotionals</h1>
-        <p>Nearly 500 prayers, each shown in full, word for word. Stories of the early believers told by ‘Abdu’l-Bahá. Or build a devotional on any theme in one tap.</p>
+        <h1>Prayers, Stories &amp; Songs</h1>
+        <p>Nearly 500 prayers, each shown in full, word for word. Stories of the early believers told by ‘Abdu’l-Bahá. Over 300 songs to sing together. Or build a whole devotional on any theme in one tap.</p>
         <div className="tabs" role="tablist" aria-label="Prayers or devotional">
           <button className="tab" role="tab" aria-selected={tab === "browse"} onClick={() => { setTab("browse"); }}>Prayers</button>
           <button className="tab" role="tab" aria-selected={tab === "stories"} onClick={() => openStories()}>Stories</button>
+          <button className="tab" role="tab" aria-selected={tab === "songs"} onClick={() => openSongs()}>Songs</button>
           <button className="tab" role="tab" aria-selected={tab === "devotional"} onClick={() => setTab("devotional")}>Devotional</button>
         </div>
       </main>
@@ -239,6 +291,43 @@ export default function Prayers({ groups }) {
         </section>
       )}
 
+      {tab === "songs" && (
+        <section className="results" aria-live="polite">
+          <p className="note">From the <a href="https://www.bahaisongproject.com" target="_blank" rel="noopener noreferrer">bahá’í song project</a>. Tap a song for its lyrics, chords and video on their site. The songs belong to their artists.</p>
+          <form className="search" role="search" onSubmit={(e) => { e.preventDefault(); findSong(gq); }} style={{ maxWidth: "none" }}>
+            <label htmlFor="gq" className="sr">Find a song</label>
+            <div className="searchbox small">
+              <Glass />
+              <input id="gq" value={gq} onChange={(e) => setGq(e.target.value)} placeholder="Find a song about… e.g. unity" autoComplete="off" maxLength={200} />
+              <button className="go" type="submit" aria-label="Find a song" disabled={gFound.status === "loading"}><Arrow /></button>
+            </div>
+          </form>
+          <div className="chips left" role="group" aria-label="Language">
+            {["English", "All languages"].map((l) => <button key={l} className="chip" aria-pressed={gLang === l} onClick={() => setGLang(l)}>{l}</button>)}
+            <span style={{ width: 8 }} />
+            {SONG_TAGS.map((t) => <button key={t} className="chip" aria-pressed={gTag === t} onClick={() => { setGTag(gTag === t ? "" : t); setGFound({ status: "idle", results: [], query: "" }); }}>{t}</button>)}
+          </div>
+          {gFound.status !== "idle" && <button className="back" onClick={() => { setGFound({ status: "idle", results: [], query: "" }); setGq(""); setParams({ tab: "songs" }); }}>← All songs</button>}
+          {gFound.status === "loading" && <><p className="note">Finding songs…</p><div className="skeleton" /></>}
+          {gFound.status === "error" && <p className="empty">{gFound.error}</p>}
+          {gFound.status === "done" && <><p className="note">Songs related to “{gFound.query}”.</p>{gFound.results.map((sg) => <SongCard key={sg.slug} sg={sg} />)}</>}
+          {gFound.status === "idle" && (songs.status === "loading" ? <div className="skeleton" /> : (() => {
+            const list = songs.list.filter((sg) => (gLang === "English" ? sg.lang.includes("English") : true) && (!gTag || sg.tags.includes(gTag)));
+            return (<>
+              <p className="note">{list.length} songs</p>
+              <div className="songlist">
+                {list.map((sg) => (
+                  <a key={sg.slug} className="songrow" href={sg.url} target="_blank" rel="noopener noreferrer">
+                    <span className="st">{sg.title}</span>
+                    <span className="sm">{[sg.by, gLang !== "English" ? sg.lang.join(" / ") : null].filter(Boolean).join(" · ")}</span>
+                  </a>
+                ))}
+              </div>
+            </>);
+          })())}
+        </section>
+      )}
+
       {tab === "devotional" && (
         <section className="results" aria-live="polite">
           <form className="search" onSubmit={(e) => { e.preventDefault(); build(devTheme, 0); }} style={{ maxWidth: "none" }}>
@@ -253,7 +342,7 @@ export default function Prayers({ groups }) {
             {DEVO_THEMES.map((t) => <button key={t} className="chip" aria-pressed={devo.theme === t} onClick={() => build(t, 0)}>{t}</button>)}
           </div>
 
-          {devo.status === "idle" && <p className="note">Pick a theme and Phoenix will put together an opening prayer, readings from the Writings of Bahá’u’lláh, the Báb and ‘Abdu’l-Bahá, a story of one of the early believers, and a closing prayer, all quoted word for word.</p>}
+          {devo.status === "idle" && <p className="note">Pick a theme and Phoenix will put together an opening prayer, readings from the Writings of Bahá’u’lláh, the Báb and ‘Abdu’l-Bahá, a story of one of the early believers, a song to sing together, and a closing prayer.</p>}
           {devo.status === "loading" && <><p className="note">Gathering prayers and readings…</p><div className="skeleton" /><div className="skeleton" /><div className="skeleton" /></>}
           {devo.status === "error" && <p className="empty">{devo.error}</p>}
           {devo.status === "done" && (
@@ -265,6 +354,7 @@ export default function Prayers({ groups }) {
               {devo.opening && <Card r={devo.opening} label="Opening prayer" />}
               {devo.readings?.[0] && <Card r={devo.readings[0]} label="Reading" />}
               {devo.story && <Card r={devo.story} label="A story" />}
+              {devo.song && <SongCard sg={devo.song} label="A song" />}
               {devo.readings?.[1] && <Card r={devo.readings[1]} label="Reading" />}
               {devo.closing && <Card r={devo.closing} label="Closing prayer" />}
             </div>

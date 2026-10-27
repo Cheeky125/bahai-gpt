@@ -1,8 +1,9 @@
 // Phoenix — build a devotional on a theme: an opening prayer, a reading, a story from Memorials of the
-// Faithful, another reading, and a closing prayer. Everything is quoted word for word.
+// Faithful, another reading, a song (a link to the bahá'í song project), and a closing prayer.
+// Prayers, readings and stories are quoted word for word.
 // `seed` changes which passages are picked, so "Shuffle" gives a fresh devotional on the same theme.
 
-import { rateLimited, plan, embed, search, merge, prayerFor, shapeAll, prayerCard, storyCard, rankStories, CENTRAL_FIGURES, PRAYERS } from "../../lib/engine";
+import { rateLimited, plan, embed, search, merge, prayerFor, shapeAll, prayerCard, storyCard, rankStories, songCard, rankSongs, CENTRAL_FIGURES, PRAYERS } from "../../lib/engine";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -29,13 +30,14 @@ export async function POST(req) {
     const p = await plan(theme);
     const wordings = [theme, ...p.queries.filter((x) => x.toLowerCase() !== theme.toLowerCase())].slice(0, 3);
     const embs = await embed(wordings);
-    const [prayerLists, readingLists, storiesRanked] = await Promise.all([
+    const [prayerLists, readingLists, storiesRanked, songsRanked] = await Promise.all([
       Promise.all(wordings.map((w, i) => search(w, embs[i], null, "prayers", 30))),
       Promise.all(wordings.map((w, i) => search(w, embs[i], null, "writings", 30))),
       rankStories(embs[0]).catch((e) => { console.error(e); return []; }),
+      rankSongs(embs[0]).catch((e) => { console.error(e); return []; }),
     ]);
 
-    // Prayers: whole prayers from the prayer book only.
+    // Prayers: whole prayers (from the prayer books).
     const seenP = new Set();
     let prayers = [];
     for (const r of merge(prayerLists)) {
@@ -55,11 +57,13 @@ export async function POST(req) {
     const [opening, closing] = pick(prayers, 2, seed);
     const chosen = pick(readings, 2, seed);
     const [story] = pick(storiesRanked, 1, seed);
+    const [song] = pick(songsRanked, 1, seed);
     return Response.json({
       theme,
       opening: opening ? prayerCard(opening) : null,
       readings: shapeAll(chosen),
       story: story ? storyCard(story) : null,
+      song: song ? songCard(song) : null,
       closing: closing ? prayerCard(closing) : null,
     });
   } catch (e) {
