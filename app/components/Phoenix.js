@@ -47,7 +47,7 @@ function sourceLine(r) {
   return parts.join(", ") + (r.para ? ` ¶${r.para}` : "");
 }
 
-export function Card({ r, n, label, expanded }) {
+export function Card({ r, n, label, expanded, hideRuhi }) {
   const [copied, setCopied] = useState(false);
   const long = r.text.length > 1100;
   const [open, setOpen] = useState(expanded || !long);
@@ -66,6 +66,14 @@ export function Card({ r, n, label, expanded }) {
           <div className="who">{r.author || "Compilation"}{r.onBehalf ? " (written on behalf)" : ""}</div>
           <div className="src">{sourceLine(r)}</div>
           {r.citation && <div className="cit">{r.citation}</div>}
+          {!hideRuhi && r.ruhi && (
+            <div className="ruhitags">
+              {r.ruhi.slice(0, 2).map((x) => (
+                <a key={`${x.book}.${x.unit}.${x.section}`} href={`/institute/unit?b=${x.book}&u=${x.unit}#s${x.section}`}>Ruhi Book {x.book} · {x.unitTitle} · Section {x.section}</a>
+              ))}
+              {r.ruhi.length > 2 && <span>+{r.ruhi.length - 2} more</span>}
+            </div>
+          )}
         </div>
         <div className="actions">
           <button className="act" onClick={copy}>
@@ -105,7 +113,7 @@ export default function Phoenix() {
       const r = await fetch("/api/search", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ q: text, author: who }) });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || "Search failed");
-      setState({ status: "done", results: j.results || [], answer: j.answer || null, verified: !!j.verified, error: null, query: text });
+      setState({ status: "done", results: j.results || [], answer: j.answer || null, verified: !!j.verified, ruhiBook: j.ruhiBook || null, error: null, query: text });
     } catch (e) {
       setState({ status: "error", results: [], error: e.message, query: text });
     }
@@ -200,7 +208,7 @@ export default function Phoenix() {
         {status === "done" && results.length > 0 && (
           <>
             {state.answer && <Answer text={state.answer} verified={state.verified} onCite={(n) => { if (n > shown) setShown(results.length); setTimeout(() => document.getElementById(`p${n}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 50); }} />}
-            <p className="note">Passages{author ? ` from ${author}` : " from the Writings"} related to “{query}”, shown exactly as published.</p>
+            <p className="note">{state.ruhiBook ? <>Passages quoted in <a href="/institute">Ruhi Book {state.ruhiBook}</a> related to “{query}”, shown exactly as published.</> : <>Passages{author ? ` from ${author}` : " from the Writings"} related to “{query}”, shown exactly as published.</>}</p>
             {results.slice(0, shown).map((r, i) => <Card key={r.id} r={r} n={i + 1} />)}
             {shown < results.length && <button className="act more" onClick={() => setShown(results.length)}>Show {results.length - shown} more</button>}
           </>

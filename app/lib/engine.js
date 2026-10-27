@@ -3,6 +3,7 @@ import PRAYERS from "./prayers.json";
 import MEMORIALS from "./stories.json";
 import DAWN from "./dawnbreakers.json";
 import SONGS from "./songs.json";
+import RUHI from "./ruhi.json";
 
 export const MODEL = "claude-haiku-5-5";
 export const AUTHORS = new Set(["Bahá’u’lláh", "The Báb", "‘Abdu’l-Bahá", "Shoghi Effendi", "The Universal House of Justice"]);
@@ -190,6 +191,29 @@ export function merge(lists) {
 
 // Shape a database row for the browser. A paragraph from the prayer book becomes its whole prayer,
 // and several paragraphs of the same prayer collapse into one card.
+// ---------- Ruhi Institute index ----------
+// Where passages from the library are quoted in the Ruhi books (book, unit, section). Built privately from
+// the books (scripts/build_ruhi_index.py); only these locations are stored — never any Ruhi text.
+export const RUHI_UNITS = RUHI.units;
+export const ruhiPlaces = (ids) => {
+  const seen = new Set(), out = [];
+  for (const id of ids) for (const [b, u, s] of RUHI.passages[id] || []) {
+    const k = `${b}.${u}.${s}`;
+    if (!seen.has(k)) { seen.add(k); out.push({ book: b, unit: u, section: s, unitTitle: RUHI.units[b]?.[u - 1] || "" }); }
+  }
+  return out.sort((a, b) => a.book - b.book || a.unit - b.unit || a.section - b.section);
+};
+export const inRuhiBook = (id, book, unit) => (RUHI.passages[id] || []).some(([b, u]) => b === book && (!unit || u === unit));
+export const ruhiPassageIds = (book, unit) => Object.keys(RUHI.passages).filter((id) => inRuhiBook(id, book, unit));
+export function ruhiUnitList(book, unit) {
+  // passage ids with their first section in this unit, in book order
+  return Object.entries(RUHI.passages)
+    .map(([id, places]) => [id, places.filter(([b, u]) => b === book && u === unit).map(([, , s]) => s)])
+    .filter(([, secs]) => secs.length)
+    .map(([id, secs]) => ({ id, section: Math.min(...secs) }))
+    .sort((a, b) => a.section - b.section);
+}
+
 export function shapeAll(rows) {
   const out = [], seen = new Set();
   for (const r of rows) {
@@ -197,9 +221,12 @@ export function shapeAll(rows) {
     const id = p ? p.id : r.id;
     if (seen.has(id)) continue;
     seen.add(id);
-    out.push(p
+    const card = p
       ? prayerCard(p)
-      : { id: r.id, author: r.author, book: r.book, section: r.section, para: r.para, citation: r.citation, onBehalf: r.on_behalf, url: r.url, text: r.text, kind: r.kind });
+      : { id: r.id, author: r.author, book: r.book, section: r.section, para: r.para, citation: r.citation, onBehalf: r.on_behalf, url: r.url, text: r.text, kind: r.kind };
+    const ruhi = ruhiPlaces(p ? p.ids : [r.id]);
+    if (ruhi.length) card.ruhi = ruhi;
+    out.push(card);
   }
   return out;
 }

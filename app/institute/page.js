@@ -1,6 +1,7 @@
 import Logo from "../components/Logo";
 import Install from "../components/Install";
 import { ThemeToggle, Footer } from "../components/Phoenix";
+import { ruhiUnitList } from "../lib/engine";
 
 export const metadata = {
   title: "Institute Companion — Phoenix",
@@ -90,7 +91,7 @@ export default function Institute() {
       </header>
       <main className="ptop" style={{ paddingBottom: 64 }}>
         <h1>Institute Companion</h1>
-        <p>Studying a book of the Ruhi Institute? For each unit, tap a theme to find passages on it in the Writings. The books themselves are free to download from <a href="https://www.ruhi.org/en/materials-in-your-language" target="_blank" rel="noopener noreferrer">ruhi.org</a>.</p>
+        <p>Studying a book of the Ruhi Institute? Open any unit to see every passage from the Writings it quotes, section by section — or tap a theme to explore further. You can also search “Book 7 music” on the home page to find a quote from a particular book. The books themselves are free to download from <a href="https://www.ruhi.org/en/materials-in-your-language" target="_blank" rel="noopener noreferrer">ruhi.org</a>.</p>
         <div className="books">
           {BOOKS.map((b) => (
             <details key={b.n} className="book" open={b.n === 1}>
@@ -102,6 +103,9 @@ export default function Institute() {
                 {b.units.map((u, i) => (
                   <div key={u.title} className="unit">
                     <div className="unittitle"><span className="unitnum">Unit {i + 1}</span> {u.title}</div>
+                    {ruhiUnitList(b.n, i + 1).length > 0 && (
+                      <a className="act primary" href={`/institute/unit?b=${b.n}&u=${i + 1}`} style={{ alignSelf: "flex-start" }}>All the quotes in this unit, by section →</a>
+                    )}
                     <div className="themes left">
                       {u.topics.map((t) => <a key={t.text} className="theme" href={t.href}>{t.text}</a>)}
                     </div>
@@ -119,7 +123,7 @@ export default function Institute() {
             <p className="note">{LATER.map(([n, t]) => `Book ${n}: ${t}`).join(" · ")}. These are pre-publication or still in development; see <a href="https://www.ruhi.org/en/walking-a-path-of-service" target="_blank" rel="noopener noreferrer">ruhi.org</a>.</p>
           </div>
         </div>
-        <p className="note" style={{ fontSize: 13 }}>Book and unit titles are those published by the Ruhi Institute. Phoenix is not affiliated with the Ruhi Institute and does not reproduce its materials; the themes linked here are suggestions for finding passages in the Writings.</p>
+        <p className="note" style={{ fontSize: 13 }}>Book and unit titles are those published by the Ruhi Institute. Phoenix is not affiliated with the Ruhi Institute and does not reproduce its materials: it only records where passages from the Writings appear in each book, and shows those passages from the Bahá’í Reference Library. The explanations and exercises are in the books themselves. The theme suggestions are Phoenix’s own.</p>
       </main>
       <Footer />
     </>

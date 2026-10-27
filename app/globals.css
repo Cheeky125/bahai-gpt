@@ -155,3 +155,6 @@ a.theme { text-decoration: none; display: inline-flex; align-items: center; min-
 .laterbooks { padding: 8px 2px; display: flex; flex-direction: column; gap: 6px; }
 .homelinks { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; font-size: 14px; }
 .homelinks a { color: var(--accent); text-decoration: none; padding: 8px 4px; }
+.ruhitags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.ruhitags a, .ruhitags span { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--accentSoft); color: var(--accentText); text-decoration: none; line-height: 1.4; }
+.ruhitags span { background: var(--chip); color: var(--chipText); }

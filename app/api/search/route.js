@@ -8,7 +8,19 @@
 //    citing them by number. Passages themselves are always shown verbatim.
 
 import { matchFact } from "./facts";
-import { AUTHORS, rateLimited, claude, plan, embed, search, byIds, norm, merge, shapeAll } from "../../lib/engine";
+import { AUTHORS, rateLimited, claude, plan, embed, search, byIds, norm, merge, shapeAll, inRuhiBook, RUHI_UNITS } from "../../lib/engine";
+
+// "that quote from Book 7 about…", "ruhi book 1 prayer", "book two" → search only passages quoted in that Ruhi book.
+const NUM = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8 };
+function ruhiBookIn(q) {
+  const m = q.match(/\b(?:ruhi\s+)?book\s*(?:#|no\.?\s*)?([1-8]|one|two|three|four|five|six|seven|eight)\b/i);
+  if (!m) return null;
+  const book = NUM[m[1].toLowerCase()] || parseInt(m[1], 10);
+  const rest = q.replace(m[0], " ")
+    .replace(/\b(ruhi|find( me)?|show( me)?|where( is)?|which|what|that|the|a|quote|quotation|passage|from|in|of|about|on|is|it|unit|section|does|do|say|says|talk|talks|mention|mentions)\b/gi, " ")
+    .replace(/\s+/g, " ").trim();
+  return { book, rest };
+}
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -36,6 +48,19 @@ export async function POST(req) {
     const author = AUTHORS.has(body.author) ? body.author : null;
     const forceKind = body.kind === "prayers" ? "prayers" : null; // the Prayers page searches prayers only
     if (q.length < 2) return Response.json({ results: [] });
+
+    // Ruhi book searches: only passages that the book quotes.
+    const rb = !forceKind && ruhiBookIn(q);
+    if (rb) {
+      const topic = rb.rest.length >= 2 ? rb.rest : (RUHI_UNITS[rb.book] || []).join(" ");
+      const p = await plan(topic);
+      const wordings = [topic, ...p.queries.filter((x) => x.toLowerCase() !== topic.toLowerCase())].slice(0, 3);
+      const embs = await embed(wordings);
+      const lists = await Promise.all(wordings.map((w, i) => search(w, embs[i], author, null, 50)));
+      const inBook = merge(lists).filter((r) => inRuhiBook(r.id, rb.book));
+      const results = shapeAll(inBook).slice(0, 12);
+      return Response.json({ results, answer: null, type: "ruhi", ruhiBook: rb.book });
+    }
 
     // Quick facts: hand-checked answers to common basics — instant, no AI needed.
     const fact = author || forceKind ? null : matchFact(q);
