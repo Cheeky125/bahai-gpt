@@ -15,6 +15,7 @@ def norm(s):
     return re.sub(r"[^a-z]+", "", s.lower())
 
 def clean(t):
+    t = "\n".join(l for l in t.split("\n") if not re.search(r"↩\s*$", l))   # drop endnote lines ("1 Qur’án 21:89. ↩")
     return re.sub(r"(\w)- (?=[A-Za-z])", r"\1-", t)
 
 AUTH = {"Bahá’u’lláh": "Bahá’u’lláh", "The Báb": "The Báb", "‘Abdu’l‑Bahá": "‘Abdu’l-Bahá", "‘Abdu’l-Bahá": "‘Abdu’l-Bahá"}
