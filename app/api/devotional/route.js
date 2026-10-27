@@ -10,7 +10,7 @@ export const maxDuration = 30;
 
 const SKIP_THEMES = new Set(["Obligatory Prayers", "Tablet of Aḥmad", "Fire Tablet", "Tablet of the Holy Mariner", "Tablets of Visitation"]);
 // Skip prayers that open with an instruction from the book ("…recite this:", "The following commune…").
-const startsWithInstruction = (t) => { const first = t.split("\n")[0]; return t.startsWith("(") || /[:…]\s*$/.test(first) || /\b(recite|supplication|commune)\b/i.test(first) && first.length < 160; };
+const startsWithInstruction = (t) => { const first = t.split("\n")[0]; return t.startsWith("(") || /[:…]\s*$/.test(first) || /\b(recite|supplication|commune)\b/i.test(first) && first.length < 260; };
 const okPrayer = (p) => p && !SKIP_THEMES.has(p.theme) && p.text.length <= 2200 && !startsWithInstruction(p.text);
 
 function pick(list, n, seed) {
