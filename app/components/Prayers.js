@@ -108,7 +108,7 @@ export default function Prayers({ groups }) {
   const loadStories = async () => {
     if (stories.status !== "idle") return;
     setStories({ status: "loading", list: [] });
-    try { const j = await fetch("/api/stories").then((r) => r.json()); setStories({ status: "done", list: j.stories || [] }); }
+    try { const j = await fetch("/api/stories").then((r) => r.json()); setStories({ status: "done", list: j.stories || [], dawn: j.dawnbreakers || [] }); }
     catch { setStories({ status: "error", list: [] }); }
   };
   const openStories = (push = true) => { setTab("stories"); setStory({ status: "idle" }); setSFound({ status: "idle", results: [], query: "" }); loadStories(); if (push) setParams({ tab: "stories" }); };
@@ -116,7 +116,7 @@ export default function Prayers({ groups }) {
     setTab("stories"); loadStories(); setSFound({ status: "idle", results: [], query: "" });
     if (push) setParams({ story: id });
     setStory({ status: "loading" });
-    try { const j = await fetch(`/api/stories?id=${encodeURIComponent(id)}`).then((r) => r.json()); setStory({ status: "done", card: j.story }); }
+    try { const j = await fetch(`/api/stories?id=${encodeURIComponent(id)}`).then((r) => r.json()); setStory({ status: "done", card: j.story, prev: j.prev, next: j.next }); }
     catch { setStory({ status: "error" }); }
     window.scrollTo({ top: 0 });
   };
@@ -192,7 +192,7 @@ export default function Prayers({ groups }) {
       <Header />
       <main className="ptop">
         <h1>Prayers, Stories &amp; Songs</h1>
-        <p>Nearly 500 prayers, each shown in full, word for word. Stories of the early believers told by ‘Abdu’l-Bahá. Over 300 songs to sing together. Or build a whole devotional on any theme in one tap.</p>
+        <p>Nearly 500 prayers, each shown in full, word for word. Stories of the early believers from ‘Abdu’l-Bahá and from <em>The Dawn-Breakers</em>. Over 300 songs to sing together. Or build a whole devotional on any theme in one tap.</p>
         <div className="tabs" role="tablist" aria-label="Prayers or devotional">
           <button className="tab" role="tab" aria-selected={tab === "browse"} onClick={() => { setTab("browse"); }}>Prayers</button>
           <button className="tab" role="tab" aria-selected={tab === "stories"} onClick={() => openStories()}>Stories</button>
@@ -268,7 +268,7 @@ export default function Prayers({ groups }) {
 
       {tab === "stories" && (
         <section className="results" aria-live="polite">
-          <p className="note">From <em>Memorials of the Faithful</em>, ‘Abdu’l-Bahá’s own accounts of early believers, shown word for word.</p>
+          <p className="note">From <em>Memorials of the Faithful</em>, ‘Abdu’l-Bahá’s own accounts of early believers, and <em>The Dawn-Breakers</em>, Nabíl’s narrative of the early days of the Faith, translated by Shoghi Effendi. Shown word for word.</p>
           <form className="search" role="search" onSubmit={(e) => { e.preventDefault(); findStory(sq); }} style={{ maxWidth: "none" }}>
             <label htmlFor="sq" className="sr">Find a story</label>
             <div className="searchbox small">
@@ -280,18 +280,39 @@ export default function Prayers({ groups }) {
           {(story.status !== "idle" || sFound.status !== "idle") && <button className="back" onClick={() => openStories()}>← All stories</button>}
           {story.status === "loading" && <div className="skeleton" />}
           {story.status === "error" && <p className="empty">Couldn’t load this story. Please try again.</p>}
-          {story.status === "done" && story.card && <Card r={story.card} />}
+          {story.status === "done" && story.card && <Card key={story.card.id} r={story.card} expanded label={story.card.book === "The Dawn-Breakers" ? story.card.section : null} />}
+          {story.status === "done" && (story.prev || story.next) && (
+            <div className="dbar" style={{ justifyContent: "space-between" }}>
+              {story.prev ? <button className="act" onClick={() => openStory(story.prev)}>← Previous part</button> : <span />}
+              {story.next && <button className="act primary" onClick={() => openStory(story.next)}>Next part →</button>}
+            </div>
+          )}
           {sFound.status === "loading" && <><p className="note">Finding stories…</p><div className="skeleton" /><div className="skeleton" /></>}
           {sFound.status === "error" && <p className="empty">{sFound.error}</p>}
           {sFound.status === "done" && <><p className="note">Stories related to “{sFound.query}”.</p>{sFound.results.map((r) => <Card key={r.id} r={r} />)}</>}
           {story.status === "idle" && sFound.status === "idle" && (
             stories.status === "loading" ? <div className="skeleton" /> :
-            <div className="tgrid">
-              {stories.list.map((st) => (
-                <button key={st.id} className="tcard" onClick={() => openStory(st.id)} title={st.preview}>
-                  <span>{st.name}</span><span className="count">{st.n}</span>
-                </button>
-              ))}
+            <div className="groups">
+              <div className="group">
+                <h2 className="label">The Dawn-Breakers</h2>
+                <div className="tgrid">
+                  {(stories.dawn || []).map((ch) => (
+                    <button key={ch.id} className="tcard" onClick={() => openStory(ch.id)}>
+                      <span>{ch.title}</span><span className="count">{ch.parts} {ch.parts === 1 ? "part" : "parts"}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="group">
+                <h2 className="label">Memorials of the Faithful</h2>
+                <div className="tgrid">
+                  {stories.list.map((st) => (
+                    <button key={st.id} className="tcard" onClick={() => openStory(st.id)} title={st.preview}>
+                      <span>{st.name}</span><span className="count">{st.n}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </section>
@@ -348,7 +369,7 @@ export default function Prayers({ groups }) {
             {DEVO_THEMES.map((t) => <button key={t} className="chip" aria-pressed={devo.theme === t} onClick={() => build(t, 0)}>{t}</button>)}
           </div>
 
-          {devo.status === "idle" && <p className="note">Pick a theme and Phoenix will put together an opening prayer, readings from the Writings of Bahá’u’lláh, the Báb and ‘Abdu’l-Bahá, a story of one of the early believers, a song to sing together, and a closing prayer.</p>}
+          {devo.status === "idle" && <p className="note">Pick a theme and Phoenix will put together an opening prayer, readings from the Writings of Bahá’u’lláh, the Báb and ‘Abdu’l-Bahá, a story of the early believers, a song to sing together, and a closing prayer.</p>}
           {devo.status === "loading" && <><p className="note">Gathering prayers and readings…</p><div className="skeleton" /><div className="skeleton" /><div className="skeleton" /></>}
           {devo.status === "error" && <p className="empty">{devo.error}</p>}
           {devo.status === "done" && (

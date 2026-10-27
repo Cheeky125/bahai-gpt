@@ -1,6 +1,7 @@
 // Phoenix — shared search engine pieces used by /api/search and /api/devotional.
 import PRAYERS from "./prayers.json";
-import STORIES from "./stories.json";
+import MEMORIALS from "./stories.json";
+import DAWN from "./dawnbreakers.json";
 import SONGS from "./songs.json";
 
 export const MODEL = "claude-haiku-5-5";
@@ -22,32 +23,44 @@ export function prayerCard(p) {
 }
 
 // ---------- stories (Memorials of the Faithful, by ‘Abdu’l-Bahá) ----------
-export { STORIES };
-export const storyCard = (st) => ({ id: st.id, author: "‘Abdu’l-Bahá", book: "Memorials of the Faithful", section: `${st.n} — ${st.name}`, para: null, citation: null, onBehalf: false, url: st.url, text: st.text, kind: "writings", story: true });
+// Two sources: Memorials of the Faithful (one story per believer) and The Dawn-Breakers (Nabíl’s
+// narrative, each chapter split into readable parts).
+const ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX", "XXI", "XXII", "XXIII", "XXIV", "XXV", "XXVI"];
+export const STORIES = [...MEMORIALS.map((m) => ({ ...m, book: "Memorials of the Faithful" })), ...DAWN];
+export { MEMORIALS, DAWN };
+export const storyById = (id) => STORIES.find((x) => x.id === id) || null;
+export function storyCard(st) {
+  if (st.book === "The Dawn-Breakers") {
+    const ch = st.chapter <= 26 ? `Chapter ${ROMAN[st.chapter]}: ${st.chapterTitle}` : st.chapterTitle;
+    return { id: st.id, author: "Nabíl-i-A‘ẓam", book: "The Dawn-Breakers", section: st.parts > 1 ? `${ch} (part ${st.part} of ${st.parts})` : ch, para: null, citation: "Translated and edited by Shoghi Effendi", onBehalf: false, url: st.url, text: st.text, kind: "history", story: true };
+  }
+  return { id: st.id, author: "‘Abdu’l-Bahá", book: "Memorials of the Faithful", section: `${st.n} — ${st.name}`, para: null, citation: null, onBehalf: false, url: st.url, text: st.text, kind: "writings", story: true };
+}
 
 // Meaning fingerprints for stories and songs are computed once per server and kept in memory.
 const vecCache = new Map();
 function docVectors(key, texts) {
   if (!vecCache.has(key)) {
     const p = (async () => {
-      const out = [];
-      for (let i = 0; i < texts.length; i += 128) {
+      const batches = [];
+      for (let i = 0; i < texts.length; i += 96) batches.push(texts.slice(i, i + 96));
+      const results = await Promise.all(batches.map(async (input) => {
         const r = await fetch("https://api.voyageai.com/v1/embeddings", {
           method: "POST",
           headers: { Authorization: `Bearer ${process.env.VOYAGE_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ input: texts.slice(i, i + 128), model: "voyage-4", input_type: "document", output_dimension: 1024 }),
+          body: JSON.stringify({ input, model: "voyage-4", input_type: "document", output_dimension: 1024 }),
         });
         if (!r.ok) throw new Error(`embedding failed (${r.status})`);
         const j = await r.json();
-        out.push(...j.data.sort((a, b) => a.index - b.index).map((d) => d.embedding));
-      }
-      return out;
+        return j.data.sort((a, b) => a.index - b.index).map((d) => d.embedding);
+      }));
+      return results.flat();
     })().catch((e) => { vecCache.delete(key); throw e; });
     vecCache.set(key, p);
   }
   return vecCache.get(key);
 }
-const storyVectors = () => docVectors("stories", STORIES.map((st) => `${st.name}. ${st.text.slice(0, 6000)}`));
+const storyVectors = () => docVectors("stories", STORIES.map((st) => st.book === "The Dawn-Breakers" ? `${st.chapterTitle}. ${st.text.slice(0, 2500)}` : `${st.name}. ${st.text.slice(0, 3000)}`));
 const dot = (a, b) => { let s = 0; for (let i = 0; i < a.length; i++) s += a[i] * b[i]; return s; };
 // Stories ranked by how close they are in meaning to a query embedding.
 export async function rankStories(queryVec) {

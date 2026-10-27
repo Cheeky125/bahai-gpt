@@ -47,10 +47,10 @@ function sourceLine(r) {
   return parts.join(", ") + (r.para ? ` ¶${r.para}` : "");
 }
 
-export function Card({ r, n, label }) {
+export function Card({ r, n, label, expanded }) {
   const [copied, setCopied] = useState(false);
   const long = r.text.length > 1100;
-  const [open, setOpen] = useState(!long);
+  const [open, setOpen] = useState(expanded || !long);
   const copy = async () => {
     const txt = `“${r.text}”\n— ${r.author || "Compilation"}, ${sourceLine(r)}${r.onBehalf ? " (letter written on behalf)" : ""}\n${r.url}`;
     try { await navigator.clipboard.writeText(txt); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch (e) {}
@@ -60,7 +60,7 @@ export function Card({ r, n, label }) {
       {n != null && <span className="num" aria-hidden="true">{n}</span>}
       {label && <div className="label cardlabel">{label}</div>}
       <blockquote className={`quote${open ? "" : " clipped"}`}>{r.text}</blockquote>
-      {long && <button className="act more inline" onClick={() => setOpen(!open)} aria-expanded={open}>{open ? "Show less" : r.prayer ? "Show full prayer" : r.story ? "Read the whole story" : "Show full passage"}</button>}
+      {long && !expanded && <button className="act more inline" onClick={() => setOpen(!open)} aria-expanded={open}>{open ? "Show less" : r.prayer ? "Show full prayer" : r.story ? "Read the whole story" : "Show full passage"}</button>}
       <div className="meta">
         <div>
           <div className="who">{r.author || "Compilation"}{r.onBehalf ? " (written on behalf)" : ""}</div>
