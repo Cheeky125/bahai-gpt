@@ -1,8 +1,8 @@
-// Phoenix — build a devotional on a theme: an opening prayer, two readings from the Writings of
-// Bahá'u'lláh, the Báb and 'Abdu'l-Bahá, and a closing prayer. Everything is quoted word for word.
+// Phoenix — build a devotional on a theme: an opening prayer, a reading, a story from Memorials of the
+// Faithful, another reading, and a closing prayer. Everything is quoted word for word.
 // `seed` changes which passages are picked, so "Shuffle" gives a fresh devotional on the same theme.
 
-import { rateLimited, plan, embed, search, merge, prayerFor, shapeAll, CENTRAL_FIGURES, PRAYERS } from "../../lib/engine";
+import { rateLimited, plan, embed, search, merge, prayerFor, shapeAll, prayerCard, storyCard, rankStories, CENTRAL_FIGURES, PRAYERS } from "../../lib/engine";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -29,9 +29,10 @@ export async function POST(req) {
     const p = await plan(theme);
     const wordings = [theme, ...p.queries.filter((x) => x.toLowerCase() !== theme.toLowerCase())].slice(0, 3);
     const embs = await embed(wordings);
-    const [prayerLists, readingLists] = await Promise.all([
+    const [prayerLists, readingLists, storiesRanked] = await Promise.all([
       Promise.all(wordings.map((w, i) => search(w, embs[i], null, "prayers", 30))),
       Promise.all(wordings.map((w, i) => search(w, embs[i], null, "writings", 30))),
+      rankStories(embs[0]).catch((e) => { console.error(e); return []; }),
     ]);
 
     // Prayers: whole prayers from the prayer book only.
@@ -49,16 +50,17 @@ export async function POST(req) {
     if (prayers.length < 2) prayers = prayers.concat(PRAYERS.filter((x) => okPrayer(x) && x.theme === "Spiritual Growth" && !seenP.has(x.id)));
 
     // Readings: Central Figures' Writings, a comfortable length to read aloud.
-    const readings = merge(readingLists).filter((r) => CENTRAL_FIGURES.has(r.author) && r.text.length >= 150 && r.text.length <= 1400);
+    const readings = merge(readingLists).filter((r) => CENTRAL_FIGURES.has(r.author) && r.book !== "Memorials of the Faithful" && r.text.length >= 150 && r.text.length <= 1400);
 
     const [opening, closing] = pick(prayers, 2, seed);
     const chosen = pick(readings, 2, seed);
-    const asCard = (pr) => pr && shapeAll([{ id: pr.ids[0] }])[0];
+    const [story] = pick(storiesRanked, 1, seed);
     return Response.json({
       theme,
-      opening: asCard(opening),
+      opening: opening ? prayerCard(opening) : null,
       readings: shapeAll(chosen),
-      closing: asCard(closing),
+      story: story ? storyCard(story) : null,
+      closing: closing ? prayerCard(closing) : null,
     });
   } catch (e) {
     console.error(e);

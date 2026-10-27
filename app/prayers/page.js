@@ -2,7 +2,7 @@ import { PRAYERS } from "../lib/engine";
 import Prayers from "../components/Prayers";
 
 export const metadata = {
-  title: "Prayers & Devotionals — Phoenix",
+  title: "Prayers, Stories & Devotionals — Phoenix",
   description: "Browse Bahá’í prayers by theme, each shown in full, or build a devotional on any theme.",
 };
 
@@ -17,7 +17,7 @@ export default function PrayersPage() {
     t.count++;
   }
   // Show everyday prayers first.
-  const order = ["General Prayers", "Obligatory Prayers", "Occasional Prayers", "Special Tablets"];
+  const order = ["General Prayers", "Obligatory Prayers", "Occasional Prayers", "Special Tablets", "More Prayer Books"];
   groups.sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name));
   return <Prayers groups={groups} />;
 }

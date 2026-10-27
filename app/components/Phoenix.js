@@ -59,7 +59,7 @@ export function Card({ r, n, label }) {
       {n != null && <span className="num" aria-hidden="true">{n}</span>}
       {label && <div className="label cardlabel">{label}</div>}
       <blockquote className={`quote${open ? "" : " clipped"}`}>{r.text}</blockquote>
-      {long && <button className="act more inline" onClick={() => setOpen(!open)} aria-expanded={open}>{open ? "Show less" : r.prayer ? "Show full prayer" : "Show full passage"}</button>}
+      {long && <button className="act more inline" onClick={() => setOpen(!open)} aria-expanded={open}>{open ? "Show less" : r.prayer ? "Show full prayer" : r.story ? "Read the whole story" : "Show full passage"}</button>}
       <div className="meta">
         <div>
           <div className="who">{r.author || "Compilation"}{r.onBehalf ? " (written on behalf)" : ""}</div>

@@ -1,5 +1,6 @@
 // Phoenix — shared search engine pieces used by /api/search and /api/devotional.
 import PRAYERS from "./prayers.json";
+import STORIES from "./stories.json";
 
 export const MODEL = "claude-haiku-5-5";
 export const AUTHORS = new Set(["Bahá’u’lláh", "The Báb", "‘Abdu’l-Bahá", "Shoghi Effendi", "The Universal House of Justice"]);
@@ -13,6 +14,39 @@ export { PRAYERS };
 const PRAYER_OF = new Map();
 PRAYERS.forEach((p, i) => p.ids.forEach((id) => PRAYER_OF.set(id, i)));
 export const prayerFor = (paragraphId) => (PRAYER_OF.has(paragraphId) ? PRAYERS[PRAYER_OF.get(paragraphId)] : null);
+
+export function prayerCard(p) {
+  const section = p.sub ? `${p.theme} — ${p.sub}` : p.book === "Bahá’í Prayers" ? p.theme : p.number ? `No. ${p.number}` : null;
+  return { id: p.id, author: p.author, book: p.book, section, para: null, citation: null, onBehalf: false, url: p.url, text: p.text, kind: "prayers", prayer: true };
+}
+
+// ---------- stories (Memorials of the Faithful, by ‘Abdu’l-Bahá) ----------
+export { STORIES };
+export const storyCard = (st) => ({ id: st.id, author: "‘Abdu’l-Bahá", book: "Memorials of the Faithful", section: `${st.n} — ${st.name}`, para: null, citation: null, onBehalf: false, url: st.url, text: st.text, kind: "writings", story: true });
+
+// Each story's meaning fingerprint is computed once per server and kept in memory.
+let storyVecs = null;
+async function storyVectors() {
+  if (!storyVecs) {
+    storyVecs = (async () => {
+      const r = await fetch("https://api.voyageai.com/v1/embeddings", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${process.env.VOYAGE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ input: STORIES.map((st) => `${st.name}. ${st.text.slice(0, 6000)}`), model: "voyage-4", input_type: "document", output_dimension: 1024 }),
+      });
+      if (!r.ok) throw new Error(`story embedding failed (${r.status})`);
+      const j = await r.json();
+      return j.data.sort((a, b) => a.index - b.index).map((d) => d.embedding);
+    })().catch((e) => { storyVecs = null; throw e; });
+  }
+  return storyVecs;
+}
+const dot = (a, b) => { let s = 0; for (let i = 0; i < a.length; i++) s += a[i] * b[i]; return s; };
+// Stories ranked by how close they are in meaning to a query embedding.
+export async function rankStories(queryVec) {
+  const vecs = await storyVectors();
+  return STORIES.map((st, i) => ({ st, score: dot(queryVec, vecs[i]) })).sort((a, b) => b.score - a.score).map((x) => x.st);
+}
 
 // ---------- rate limit ----------
 const hits = new Map();
@@ -132,7 +166,7 @@ export function shapeAll(rows) {
     if (seen.has(id)) continue;
     seen.add(id);
     out.push(p
-      ? { id: p.id, author: p.author, book: "Bahá’í Prayers", section: p.sub ? `${p.theme} — ${p.sub}` : p.theme, para: null, citation: null, onBehalf: false, url: p.url, text: p.text, kind: "prayers", prayer: true }
+      ? prayerCard(p)
       : { id: r.id, author: r.author, book: r.book, section: r.section, para: r.para, citation: r.citation, onBehalf: r.on_behalf, url: r.url, text: r.text, kind: r.kind });
   }
   return out;

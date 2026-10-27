@@ -32,9 +32,14 @@ export default function Prayers({ groups }) {
   const [devo, setDevo] = useState({ status: "idle" });
   const [seed, setSeed] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [limit, setLimit] = useState(25);
+  const [stories, setStories] = useState({ status: "idle", list: [] });
+  const [story, setStory] = useState({ status: "idle" });
+  const [sq, setSq] = useState("");
+  const [sFound, setSFound] = useState({ status: "idle", results: [], query: "" });
 
   const openTheme = async (name, push = true) => {
-    setTheme(name); setSub(""); setFound({ status: "idle", results: [], query: "" });
+    setTheme(name); setSub(""); setLimit(25); setFound({ status: "idle", results: [], query: "" });
     if (push) setParams({ theme: name });
     setList({ status: "loading", prayers: [] });
     try {
@@ -72,12 +77,44 @@ export default function Prayers({ groups }) {
     } catch (e) { setDevo({ status: "error", error: e.message }); }
   };
 
+  const loadStories = async () => {
+    if (stories.status !== "idle") return;
+    setStories({ status: "loading", list: [] });
+    try { const j = await fetch("/api/stories").then((r) => r.json()); setStories({ status: "done", list: j.stories || [] }); }
+    catch { setStories({ status: "error", list: [] }); }
+  };
+  const openStories = (push = true) => { setTab("stories"); setStory({ status: "idle" }); setSFound({ status: "idle", results: [], query: "" }); loadStories(); if (push) setParams({ tab: "stories" }); };
+  const openStory = async (id, push = true) => {
+    setTab("stories"); loadStories(); setSFound({ status: "idle", results: [], query: "" });
+    if (push) setParams({ story: id });
+    setStory({ status: "loading" });
+    try { const j = await fetch(`/api/stories?id=${encodeURIComponent(id)}`).then((r) => r.json()); setStory({ status: "done", card: j.story }); }
+    catch { setStory({ status: "error" }); }
+    window.scrollTo({ top: 0 });
+  };
+  const findStory = async (text, push = true) => {
+    const t = text.trim();
+    if (t.length < 2) return;
+    setTab("stories"); setStory({ status: "idle" }); setSq(t); loadStories();
+    if (push) setParams({ findstory: t });
+    setSFound({ status: "loading", results: [], query: t });
+    try {
+      const r = await fetch("/api/stories", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ q: t }) });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || "Search failed");
+      setSFound({ status: "done", results: j.results || [], query: t });
+    } catch (e) { setSFound({ status: "error", results: [], query: t, error: e.message }); }
+  };
+
   useEffect(() => {
     const load = () => {
       const p = new URLSearchParams(window.location.search);
       if (p.get("theme")) { setTab("browse"); openTheme(p.get("theme"), false); }
       else if (p.get("find")) { setTab("browse"); findPrayer(p.get("find"), false); }
       else if (p.get("devotional")) build(p.get("devotional"), 0, false);
+      else if (p.get("story")) openStory(p.get("story"), false);
+      else if (p.get("findstory")) findStory(p.get("findstory"), false);
+      else if (p.get("tab") === "stories") openStories(false);
       else { setTheme(null); setFound({ status: "idle", results: [], query: "" }); }
     };
     load();
@@ -90,7 +127,8 @@ export default function Prayers({ groups }) {
 
   const copyDevotional = async () => {
     const part = (label, r) => r ? `${label}\n“${r.text}”\n— ${r.author}, ${r.book}${r.section ? ", " + r.section : ""}\n` : "";
-    const txt = [`Devotional: ${devo.theme}\n`, part("Opening prayer", devo.opening), ...(devo.readings || []).map((r, i) => part(`Reading ${i + 1}`, r)), part("Closing prayer", devo.closing)].join("\n");
+    const [r1, r2] = devo.readings || [];
+    const txt = [`Devotional: ${devo.theme}\n`, part("Opening prayer", devo.opening), part("Reading", r1), part("A story", devo.story), part("Reading", r2), part("Closing prayer", devo.closing)].join("\n");
     try { await navigator.clipboard.writeText(txt.trim()); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch {}
   };
 
@@ -101,11 +139,12 @@ export default function Prayers({ groups }) {
     <>
       <Header />
       <main className="ptop">
-        <h1>Prayers &amp; Devotionals</h1>
-        <p>Every prayer is shown in full, word for word, from <em>Bahá’í Prayers</em>. Or build a devotional on any theme in one tap.</p>
+        <h1>Prayers, Stories &amp; Devotionals</h1>
+        <p>Nearly 500 prayers, each shown in full, word for word. Stories of the early believers told by ‘Abdu’l-Bahá. Or build a devotional on any theme in one tap.</p>
         <div className="tabs" role="tablist" aria-label="Prayers or devotional">
-          <button className="tab" role="tab" aria-selected={tab === "browse"} onClick={() => { setTab("browse"); }}>Browse prayers</button>
-          <button className="tab" role="tab" aria-selected={tab === "devotional"} onClick={() => setTab("devotional")}>Build a devotional</button>
+          <button className="tab" role="tab" aria-selected={tab === "browse"} onClick={() => { setTab("browse"); }}>Prayers</button>
+          <button className="tab" role="tab" aria-selected={tab === "stories"} onClick={() => openStories()}>Stories</button>
+          <button className="tab" role="tab" aria-selected={tab === "devotional"} onClick={() => setTab("devotional")}>Devotional</button>
         </div>
       </main>
 
@@ -162,8 +201,40 @@ export default function Prayers({ groups }) {
               )}
               {list.status === "loading" && <><div className="skeleton" /><div className="skeleton" /></>}
               {list.status === "error" && <p className="empty">Couldn’t load these prayers. Please try again.</p>}
-              {list.status === "done" && shownPrayers.map((r) => <Card key={r.id} r={r} />)}
+              {list.status === "done" && shownPrayers.slice(0, limit).map((r) => <Card key={r.id} r={r} />)}
+              {list.status === "done" && shownPrayers.length > limit && <button className="act more" onClick={() => setLimit(limit + 25)}>Show more prayers ({shownPrayers.length - limit} left)</button>}
             </>
+          )}
+        </section>
+      )}
+
+      {tab === "stories" && (
+        <section className="results" aria-live="polite">
+          <p className="note">From <em>Memorials of the Faithful</em>, ‘Abdu’l-Bahá’s own accounts of early believers, shown word for word.</p>
+          <form className="search" role="search" onSubmit={(e) => { e.preventDefault(); findStory(sq); }} style={{ maxWidth: "none" }}>
+            <label htmlFor="sq" className="sr">Find a story</label>
+            <div className="searchbox small">
+              <Glass />
+              <input id="sq" value={sq} onChange={(e) => setSq(e.target.value)} placeholder="Find a story about… e.g. courage" autoComplete="off" maxLength={200} />
+              <button className="go" type="submit" aria-label="Find a story" disabled={sFound.status === "loading"}><Arrow /></button>
+            </div>
+          </form>
+          {(story.status !== "idle" || sFound.status !== "idle") && <button className="back" onClick={() => openStories()}>← All stories</button>}
+          {story.status === "loading" && <div className="skeleton" />}
+          {story.status === "error" && <p className="empty">Couldn’t load this story. Please try again.</p>}
+          {story.status === "done" && story.card && <Card r={story.card} />}
+          {sFound.status === "loading" && <><p className="note">Finding stories…</p><div className="skeleton" /><div className="skeleton" /></>}
+          {sFound.status === "error" && <p className="empty">{sFound.error}</p>}
+          {sFound.status === "done" && <><p className="note">Stories related to “{sFound.query}”.</p>{sFound.results.map((r) => <Card key={r.id} r={r} />)}</>}
+          {story.status === "idle" && sFound.status === "idle" && (
+            stories.status === "loading" ? <div className="skeleton" /> :
+            <div className="tgrid">
+              {stories.list.map((st) => (
+                <button key={st.id} className="tcard" onClick={() => openStory(st.id)} title={st.preview}>
+                  <span>{st.name}</span><span className="count">{st.n}</span>
+                </button>
+              ))}
+            </div>
           )}
         </section>
       )}
@@ -182,7 +253,7 @@ export default function Prayers({ groups }) {
             {DEVO_THEMES.map((t) => <button key={t} className="chip" aria-pressed={devo.theme === t} onClick={() => build(t, 0)}>{t}</button>)}
           </div>
 
-          {devo.status === "idle" && <p className="note">Pick a theme and Phoenix will put together an opening prayer, two readings from the Writings of Bahá’u’lláh, the Báb and ‘Abdu’l-Bahá, and a closing prayer, all quoted word for word.</p>}
+          {devo.status === "idle" && <p className="note">Pick a theme and Phoenix will put together an opening prayer, readings from the Writings of Bahá’u’lláh, the Báb and ‘Abdu’l-Bahá, a story of one of the early believers, and a closing prayer, all quoted word for word.</p>}
           {devo.status === "loading" && <><p className="note">Gathering prayers and readings…</p><div className="skeleton" /><div className="skeleton" /><div className="skeleton" /></>}
           {devo.status === "error" && <p className="empty">{devo.error}</p>}
           {devo.status === "done" && (
@@ -192,7 +263,9 @@ export default function Prayers({ groups }) {
                 <button className="act" onClick={() => build(devo.theme, seed + 1, false)}>Shuffle</button>
               </div>
               {devo.opening && <Card r={devo.opening} label="Opening prayer" />}
-              {(devo.readings || []).map((r, i) => <Card key={r.id} r={r} label={`Reading ${i + 1}`} />)}
+              {devo.readings?.[0] && <Card r={devo.readings[0]} label="Reading" />}
+              {devo.story && <Card r={devo.story} label="A story" />}
+              {devo.readings?.[1] && <Card r={devo.readings[1]} label="Reading" />}
               {devo.closing && <Card r={devo.closing} label="Closing prayer" />}
             </div>
           )}
