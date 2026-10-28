@@ -50,7 +50,8 @@ function sourceLine(r) {
 
 export function Card({ r, n, label, expanded, hideRuhi }) {
   const [copied, setCopied] = useState(false);
-  const long = r.text.length > 1100;
+  // r.excerpt: the words a Ruhi book quotes from this passage, cut where the book cuts them
+  const long = !!r.excerpt || r.text.length > 1100;
   const [open, setOpen] = useState(expanded || !long);
   const copy = async () => {
     const txt = `“${r.text}”\n— ${r.author || "Compilation"}, ${sourceLine(r)}${r.onBehalf ? " (letter written on behalf)" : ""}\n${r.url}`;
@@ -60,8 +61,8 @@ export function Card({ r, n, label, expanded, hideRuhi }) {
     <article className="card" id={`p${n}`}>
       {n != null && <span className="num" aria-hidden="true">{n}</span>}
       {label && <div className="label cardlabel">{label}</div>}
-      <blockquote className={`quote${open ? "" : " clipped"}`}>{r.text}</blockquote>
-      {long && !expanded && <button className="act more inline" onClick={() => setOpen(!open)} aria-expanded={open}>{open ? "Show less" : r.prayer ? "Show full prayer" : r.story ? "Read the whole story" : "Show full passage"}</button>}
+      <blockquote className={`quote${open || r.excerpt ? "" : " clipped"}`}>{r.excerpt && !open ? r.excerpt : r.text}</blockquote>
+      {long && !expanded && <button className="act more inline" onClick={() => setOpen(!open)} aria-expanded={open}>{open ? (r.excerpt ? "Show only the quote" : "Show less") : r.excerpt ? "Show the full passage" : r.prayer ? "Show full prayer" : r.story ? "Read the whole story" : "Show full passage"}</button>}
       <div className="meta">
         <div>
           <div className="who">{r.author || "Compilation"}{r.onBehalf ? " (written on behalf)" : ""}</div>
@@ -70,7 +71,7 @@ export function Card({ r, n, label, expanded, hideRuhi }) {
           {!hideRuhi && r.ruhi && (
             <div className="ruhitags">
               {r.ruhi.slice(0, 2).map((x) => (
-                <a key={`${x.book}.${x.unit}.${x.section}`} href={`/institute/unit?b=${x.book}&u=${x.unit}#s${x.section}`}>Ruhi Book {x.book} · {x.unitTitle} · Section {x.section}</a>
+                <a key={`${x.book}.${x.unit}.${x.section}`} href={`/institute?b=${x.book}&u=${x.unit}&s=${x.section}`}>Ruhi Book {x.book} · {x.unitTitle} · Section {x.section}</a>
               ))}
               {r.ruhi.length > 2 && <span>+{r.ruhi.length - 2} more</span>}
             </div>

@@ -198,7 +198,7 @@ export function merge(lists) {
 // and several paragraphs of the same prayer collapse into one card.
 // ---------- Ruhi Institute index ----------
 // Where passages from the library are quoted in the Ruhi books (book, unit, section). Built privately from
-// the books (scripts/build_ruhi_index.py); only these locations are stored — never any Ruhi text.
+// the books (scripts/build_ruhi_excerpts.py); only these locations are stored — never any Ruhi text.
 export const RUHI_UNITS = RUHI.units;
 export const ruhiPlaces = (ids) => {
   const seen = new Set(), out = [];
@@ -210,13 +210,49 @@ export const ruhiPlaces = (ids) => {
 };
 export const inRuhiBook = (id, book, unit) => (RUHI.passages[id] || []).some(([b, u]) => b === book && (!unit || u === unit));
 export const ruhiPassageIds = (book, unit) => Object.keys(RUHI.passages).filter((id) => inRuhiBook(id, book, unit));
-export function ruhiUnitList(book, unit) {
-  // passage ids with their first section in this unit, in book order
-  return Object.entries(RUHI.passages)
-    .map(([id, places]) => [id, places.filter(([b, u]) => b === book && u === unit).map(([, , s]) => s)])
-    .filter(([, secs]) => secs.length)
-    .map(([id, secs]) => ({ id, section: Math.min(...secs) }))
-    .sort((a, b) => a.section - b.section);
+export const RUHI_SECTIONS = RUHI.sections || {};
+// The quotes a unit uses, section by section, as the book cuts them: [{ section, quotes: [{ id, parts }] }]
+export function ruhiUnitQuotes(book, unit) {
+  const n = RUHI_SECTIONS[`${book}.${unit}`] || 0;
+  const out = [];
+  for (let s = 1; s <= n; s++) out.push({ section: s, quotes: RUHI.quotes[`${book}.${unit}.${s}`] || [] });
+  return out;
+}
+export const ruhiQuoteCount = (book, unit) => ruhiUnitQuotes(book, unit).reduce((n, s) => n + s.quotes.length, 0);
+// Cut a library passage the way the book quotes it, with "…" where the book leaves words out.
+// m = how the book opens/closes the quote: "q" a quotation mark, "e" an ellipsis, "-" unclear (then guess).
+export function ruhiExcerpt(text, parts, m = "--") {
+  let out = parts.map(([a, b]) => text.slice(a, b).trim()).join(" … ");
+  // a closing quotation mark whose opening one was left out (the library's narration around a quote)
+  if ((out.match(/”/g) || []).length > (out.match(/“/g) || []).length) out = out.replace(/”(?=[^”]*$)/, "");
+  const midStart = parts[0][0] > 0 && /[a-z]/.test(text[parts[0][0]]);
+  if (m[0] === "q") out = out.charAt(0).toUpperCase() + out.slice(1);   // the book starts its quote here
+  else if (m[0] === "e" || midStart) out = "… " + out;
+  const cut = parts[parts.length - 1][1] < text.trimEnd().length;
+  if (m[1] === "e" || (m[1] !== "q" && cut && !/[.!?”’)]$/.test(out))) out = out.replace(/[,;:]$/, "") + " …";
+  return out;
+}
+
+// The first place a Ruhi book (optionally a unit) quotes this passage: { parts, book, unit, section }
+let quotesById = null;
+export function ruhiQuoteFor(id, book, unit) {
+  if (!quotesById) {
+    quotesById = new Map();
+    for (const [k, lst] of Object.entries(RUHI.quotes || {})) {
+      const [b, u, s] = k.split(".").map(Number);
+      for (const q of lst) { if (!quotesById.has(q.id)) quotesById.set(q.id, []); quotesById.get(q.id).push({ parts: q.parts, m: q.m, book: b, unit: u, section: s }); }
+    }
+  }
+  return (quotesById.get(id) || []).find((q) => q.book === book && (!unit || q.unit === unit)) || null;
+}
+// Show only the words the book quotes, when that's noticeably less than the whole passage.
+export function withRuhiExcerpt(card, book, unit) {
+  if (card.prayer || card.story) return card;
+  const q = ruhiQuoteFor(card.id, book, unit);
+  if (!q) return card;
+  const covered = q.parts.reduce((n, [a, b]) => n + b - a, 0);
+  if (covered < card.text.trim().length * 0.9) card.excerpt = ruhiExcerpt(card.text, q.parts, q.m);
+  return card;
 }
 
 export function shapeAll(rows) {

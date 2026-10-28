@@ -8,7 +8,7 @@
 //    citing them by number. Passages themselves are always shown verbatim.
 
 import { matchFact } from "./facts";
-import { AUTHORS, rateLimited, claude, plan, embed, search, byIds, norm, merge, shapeAll, inRuhiBook, RUHI_UNITS } from "../../lib/engine";
+import { AUTHORS, rateLimited, claude, plan, embed, search, byIds, norm, merge, shapeAll, inRuhiBook, withRuhiExcerpt, RUHI_UNITS } from "../../lib/engine";
 
 // "that quote from Book 7 about…", "ruhi book 1 prayer", "book two" → search only passages quoted in that Ruhi book.
 const NUM = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8 };
@@ -58,7 +58,7 @@ export async function POST(req) {
       const embs = await embed(wordings);
       const lists = await Promise.all(wordings.map((w, i) => search(w, embs[i], author, null, 50)));
       const inBook = merge(lists).filter((r) => inRuhiBook(r.id, rb.book));
-      const results = shapeAll(inBook).slice(0, 12);
+      const results = shapeAll(inBook).slice(0, 12).map((c) => withRuhiExcerpt(c, rb.book));
       return Response.json({ results, answer: null, type: "ruhi", ruhiBook: rb.book });
     }
 

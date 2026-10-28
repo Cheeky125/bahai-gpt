@@ -1,10 +1,8 @@
-import RuhiUnit from "../../components/RuhiUnit";
+import { redirect } from "next/navigation";
 
-export const metadata = {
-  title: "Ruhi unit passages — Phoenix",
-  description: "The passages from the Writings quoted in a unit of a Ruhi Institute book, in section order.",
-};
-
-export default function Page() {
-  return <RuhiUnit />;
+// Old address for a unit's quotes; the study page now lives at /institute.
+export default async function Page({ searchParams }) {
+  const p = await searchParams;
+  const b = parseInt(p?.b, 10), u = parseInt(p?.u, 10);
+  redirect(b && u ? `/institute?b=${b}&u=${u}` : "/institute");
 }
