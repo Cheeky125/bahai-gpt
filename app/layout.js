@@ -6,6 +6,8 @@ const sans = Inter({ subsets: ["latin", "latin-ext"], variable: "--font-sans", d
 const serif = Source_Serif_4({ subsets: ["latin", "latin-ext"], variable: "--font-serif", display: "swap" });
 
 export const metadata = {
+  metadataBase: new URL("https://www.phoenixwritings.com"),
+  openGraph: { title: "Phoenix — Search the Bahá’í Writings", description: "Search the Bahá’í Writings, find prayers, stories and songs, and build devotionals.", url: "https://www.phoenixwritings.com", siteName: "Phoenix", images: [{ url: "/icon-512.png", width: 512, height: 512 }] },
   title: "Phoenix — Search the Bahá’í Writings",
   description: "Search the Bahá’í Writings by theme or question. Every passage is shown word for word, with its exact source.",
   icons: { icon: [{ url: "/icon.svg", type: "image/svg+xml" }, { url: "/icon-192.png", sizes: "192x192", type: "image/png" }], apple: "/apple-touch-icon.png" },
