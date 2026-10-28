@@ -152,7 +152,7 @@ export default function Phoenix() {
       <>
         <header className="header">
           <button className="brand" onClick={home}><Logo id="h" />Phoenix</button>
-          <nav className="nav"><Install /><a href="/prayers">Prayers</a><a href="/about">About</a><ThemeToggle /></nav>
+          <nav className="nav"><Install /><a href="/prayers">Prayers</a><a href="/institute">Ruhi</a><a href="/about">About</a><ThemeToggle /></nav>
         </header>
         <main className="hero">
           <Logo size={128} glow id="hero" />
@@ -167,16 +167,12 @@ export default function Phoenix() {
             </div>
             {chips}
           </form>
+          <FeatureCards />
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
             <div className="label">Try a theme</div>
             <div className="themes">
               {THEMES.map((t) => <button key={t} className="theme" onClick={() => run(t)}>{t}</button>)}
             </div>
-          </div>
-          <div className="homelinks">
-            <a href="/prayers">Prayers, stories &amp; songs →</a>
-            <a href="/prayers?tab=devotional">Build a devotional →</a>
-            <a href="/institute">Studying a Ruhi book? →</a>
           </div>
         </main>
         <Footer />
@@ -197,7 +193,7 @@ export default function Phoenix() {
             <button className="go" type="submit" aria-label="Search" disabled={status === "loading"}><Arrow /></button>
           </div>
         </form>
-        <nav className="nav"><Install /><a href="/prayers">Prayers</a><a href="/about">About</a><ThemeToggle /></nav>
+        <nav className="nav"><Install /><a href="/prayers">Prayers</a><a href="/institute">Ruhi</a><a href="/about">About</a><ThemeToggle /></nav>
       </header>
       <main className="results" aria-live="polite">
         {chips}
@@ -237,12 +233,78 @@ function Answer({ text, verified, onCite }) {
   );
 }
 
+const ICONS = {
+  search: <><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></>,
+  prayers: <><path d="M12 3c-1.5 2-2 3.6-2 5a2 2 0 0 0 4 0c0-1.4-.5-3-2-5Z" /><path d="M7 21v-6.5a5 5 0 0 1 10 0V21" /><path d="M5 21h14" /></>,
+  devotional: <><path d="M4 6h16M4 12h16M4 18h10" /><path d="m17 16 2 2 3-4" /></>,
+  stories: <><path d="M4 5a2 2 0 0 1 2-2h11v16H6a2 2 0 0 0-2 2V5Z" /><path d="M8 7h6M8 11h6" /></>,
+  ruhi: <><path d="M2 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H2Z" /><path d="M22 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8Z" /></>,
+};
+export function Icon({ name, size = 22 }) {
+  return <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{ICONS[name]}</svg>;
+}
+
+const FEATURES = [
+  { icon: "prayers", title: "Prayers", text: "Nearly 500 prayers in full, by theme — healing, the departed, children, tests…", href: "/prayers" },
+  { icon: "devotional", title: "Build a devotional", text: "Pick a theme; get prayers, readings, a story and a song, ready to share.", href: "/prayers?tab=devotional" },
+  { icon: "stories", title: "Stories & songs", text: "The Dawn-Breakers, Memorials of the Faithful, and 300+ songs to sing.", href: "/prayers?tab=stories" },
+  { icon: "ruhi", title: "Ruhi companion", text: "Every quote in each unit of Books 1–8, section by section.", href: "/institute" },
+];
+export function FeatureCards() {
+  return (
+    <nav className="features" aria-label="More in Phoenix">
+      {FEATURES.map((f) => (
+        <a key={f.title} className="feature" href={f.href}>
+          <span className="fic"><Icon name={f.icon} /></span>
+          <span className="ftext"><span className="ftitle">{f.title}</span><span className="fdesc">{f.text}</span></span>
+        </a>
+      ))}
+    </nav>
+  );
+}
+
+// Bottom tab bar on phones, like an app.
+const TABS = [
+  { icon: "search", label: "Search", href: "/", is: (p, q) => p === "/" },
+  { icon: "prayers", label: "Prayers", href: "/prayers", is: (p, q) => p === "/prayers" && !/tab=(devotional|stories|songs)|devotional=|story=|findstory=|findsong=/.test(q) },
+  { icon: "devotional", label: "Devotional", href: "/prayers?tab=devotional", is: (p, q) => p === "/prayers" && /tab=devotional|devotional=/.test(q) },
+  { icon: "stories", label: "Stories", href: "/prayers?tab=stories", is: (p, q) => p === "/prayers" && /tab=(stories|songs)|story=|findstory=|findsong=/.test(q) },
+  { icon: "ruhi", label: "Ruhi", href: "/institute", is: (p) => p.startsWith("/institute") },
+];
+export function BottomNav() {
+  const [loc, setLoc] = useState({ p: "", q: "" });
+  useEffect(() => {
+    const upd = () => setLoc({ p: window.location.pathname, q: window.location.search });
+    upd();
+    window.addEventListener("popstate", upd);
+    const push = history.pushState;
+    history.pushState = function (...a) { const r = push.apply(this, a); upd(); return r; };
+    return () => { window.removeEventListener("popstate", upd); history.pushState = push; };
+  }, []);
+  return (
+    <nav className="bottomnav" aria-label="Main">
+      {TABS.map((t) => {
+        const on = loc.p && t.is(loc.p, loc.q);
+        return (
+          <a key={t.label} href={t.href} aria-current={on ? "page" : undefined}>
+            <Icon name={t.icon} size={22} />
+            <span>{t.label}</span>
+          </a>
+        );
+      })}
+    </nav>
+  );
+}
+
 export function Footer() {
   return (
+    <>
     <footer className="footer">
       <div style={{ marginBottom: 12 }}><Feedback /></div>
       An independent study tool, not an official publication of any Bahá’í institution.
       Texts from the <a href="https://www.bahai.org/library/" target="_blank" rel="noopener noreferrer">Bahá’í Reference Library</a>. · <a href="/institute">Institute companion</a> · <a href="/about">About Phoenix</a>
     </footer>
+    <BottomNav />
+    </>
   );
 }

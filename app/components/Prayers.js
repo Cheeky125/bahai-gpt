@@ -217,6 +217,7 @@ export default function Prayers({ groups }) {
       else if (p.get("tab") === "stories") openStories(false);
       else if (p.get("findsong")) findSong(p.get("findsong"), false);
       else if (p.get("tab") === "songs") openSongs(false);
+      else if (p.get("tab") === "devotional") { setTab("devotional"); setDevo({ status: "idle" }); }
       else { setTheme(null); setFound({ status: "idle", results: [], query: "" }); }
     };
     load();
@@ -244,10 +245,10 @@ export default function Prayers({ groups }) {
         <h1>Prayers, Stories &amp; Songs</h1>
         <p>Nearly 500 prayers, each shown in full, word for word. Stories of the early believers from ‘Abdu’l-Bahá and from <em>The Dawn-Breakers</em>. Over 300 songs to sing together. Or build a whole devotional on any theme in one tap.</p>
         <div className="tabs" role="tablist" aria-label="Prayers or devotional">
-          <button className="tab" role="tab" aria-selected={tab === "browse"} onClick={() => { setTab("browse"); }}>Prayers</button>
+          <button className="tab" role="tab" aria-selected={tab === "browse"} onClick={() => { setTab("browse"); if (!theme && found.status === "idle") setParams({}); }}>Prayers</button>
           <button className="tab" role="tab" aria-selected={tab === "stories"} onClick={() => openStories()}>Stories</button>
           <button className="tab" role="tab" aria-selected={tab === "songs"} onClick={() => openSongs()}>Songs</button>
-          <button className="tab" role="tab" aria-selected={tab === "devotional"} onClick={() => setTab("devotional")}>Devotional</button>
+          <button className="tab" role="tab" aria-selected={tab === "devotional"} onClick={() => { setTab("devotional"); if (devo.status === "idle") setParams({ tab: "devotional" }); }}>Devotional</button>
         </div>
       </main>
 

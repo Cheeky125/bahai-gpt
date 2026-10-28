@@ -1,4 +1,5 @@
 import Logo from "../components/Logo";
+import { BottomNav } from "../components/Phoenix";
 
 export const metadata = { title: "About — Phoenix" };
 
@@ -22,6 +23,7 @@ export default function About() {
         <p>Phoenix is an independent study tool. It is not an official publication of any Bahá’í institution and does not interpret the Writings. Paragraph numbers are given as in the source where printed; otherwise they are counted within each section and may differ slightly from the Library’s numbering. If you find an error, please let us know.</p>
       </main>
       <footer className="footer">An independent study tool, not an official publication of any Bahá’í institution.</footer>
+      <BottomNav />
     </>
   );
 }
