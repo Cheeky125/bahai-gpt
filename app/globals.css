@@ -278,3 +278,26 @@ a.theme { text-decoration: none; display: inline-flex; align-items: center; min-
 .sharepreview { display: flex; justify-content: center; min-height: 0; flex: 1; }
 .sharepreview img { max-width: 100%; max-height: calc(100vh - 220px); border-radius: 12px; object-fit: contain; box-shadow: 0 4px 20px rgba(0,0,0,.25); }
 .sharepreview.story { aspect-ratio: auto; }
+
+/* Hover ring on everything you can click (like the feature cards), and the same ring for keyboard focus */
+.act, .chip, .theme, .tcard, .tab, .iconbtn, .sbtn, .unitrow, .songrow, .installbtn, .fbbtn, .cite, .blank, .continue,
+.todaystrip, .event, .feature, .go, .book, .back, .nav a, .brand, .footer a, .themes a { transition: border-color .15s, box-shadow .15s, outline-color .15s, transform .15s; }
+@media (hover: hover) {
+  /* things with a border: the border turns orange */
+  :is(.act:not(.primary), .chip, .tcard, .iconbtn, .sbtn, .unitrow, .installbtn, .fbbtn, .continue, .todaystrip):hover:not(:disabled) { border-color: var(--accent); }
+  /* things without a border: an orange ring inside */
+  :is(.theme, .tab, .act.link, .cite, .blank):hover:not(:disabled) { box-shadow: inset 0 0 0 1px var(--accent); }
+  :is(.songrow, .event):hover { box-shadow: inset 0 0 0 1px var(--accent); }
+  .book:has(> summary:hover) { border-color: var(--accent); }
+  /* filled buttons: a ring just outside */
+  :is(.act.primary, .go):hover:not(:disabled) { outline: 2px solid var(--accent); outline-offset: 2px; }
+  /* text links in the header and footer */
+  :is(.nav a:not(.iconbtn):not(.installbtn), .back, .brand):hover { outline: 1px solid var(--accent); outline-offset: 4px; border-radius: 6px; }
+  .feature:hover, .unitrow:hover:not(:disabled), .todaystrip:hover, .continue:hover { transform: translateY(-1px); }
+}
+:is(a, button, summary, input[type="checkbox"]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+.searchbox:focus-within { border-color: var(--accent); }
+@media (hover: hover) {
+  /* already orange-bordered: make the ring a little stronger */
+  :is(.todaystrip, .continue, .act.fav.on, .act.on, .chip[aria-pressed="true"]):hover { box-shadow: 0 0 0 1px var(--accent); }
+}
