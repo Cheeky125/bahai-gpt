@@ -8,7 +8,7 @@ export default function About() {
     <>
       <header className="header bar">
         <a className="brand" href="/" style={{ textDecoration: "none" }}><Logo id="a" />Phoenix</a>
-        <nav className="nav"><a href="/">Search</a><a href="/prayers">Prayers</a></nav>
+        <nav className="nav"><a href="/">Search</a><a href="/today">Today</a><a href="/prayers">Prayers</a></nav>
       </header>
       <main className="page">
         <h1>About Phoenix</h1>

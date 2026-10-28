@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Logo from "./Logo";
 import Install from "./Install";
 import { Card, ThemeToggle, Footer, Glass, Arrow } from "./Phoenix";
+import { SavedLink } from "./Saved";
 
 const DEVO_THEMES = ["Unity", "Service", "Detachment", "Hope", "Gratitude", "Justice", "Healing", "Love of God", "Tests and difficulties", "Children and youth"];
 
@@ -10,7 +11,7 @@ function Header() {
   return (
     <header className="header bar">
       <a className="brand" href="/" style={{ textDecoration: "none" }}><Logo id="hp" />Phoenix</a>
-      <nav className="nav"><Install /><a href="/">Search</a><a href="/about">About</a><ThemeToggle /></nav>
+      <nav className="nav"><Install /><a href="/">Search</a><a href="/today">Today</a><a href="/about">About</a><SavedLink /><ThemeToggle /></nav>
     </header>
   );
 }

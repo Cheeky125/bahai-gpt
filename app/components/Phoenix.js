@@ -3,6 +3,9 @@ import { useEffect, useRef, useState } from "react";
 import Logo from "./Logo";
 import Install from "./Install";
 import Feedback from "./Feedback";
+import { FavButton, SavedLink } from "./Saved";
+import { ShareButton } from "./Share";
+import { badiDate, badiString, upcoming, ymd, daysBetween } from "../lib/badi";
 
 const AUTHORS = [
   ["", "All authors"],
@@ -78,12 +81,14 @@ export function Card({ r, n, label, expanded, hideRuhi }) {
           )}
         </div>
         <div className="actions">
+          <FavButton r={r} />
+          <ShareButton r={r} label="Image" />
           <button className="act" onClick={copy}>
             <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>
-            {copied ? "Copied" : "Copy with citation"}
+            {copied ? "Copied" : "Copy"}
           </button>
           <a className="act link" href={r.url} target="_blank" rel="noopener noreferrer">
-            Read on bahai.org
+            bahai.org
             <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M8 7h9v9" /></svg>
           </a>
         </div>
@@ -153,7 +158,7 @@ export default function Phoenix() {
       <>
         <header className="header">
           <button className="brand" onClick={home}><Logo id="h" />Phoenix</button>
-          <nav className="nav"><Install /><a href="/prayers">Prayers</a><a href="/institute">Ruhi</a><a href="/about">About</a><ThemeToggle /></nav>
+          <nav className="nav"><Install /><a href="/today">Today</a><a href="/prayers">Prayers</a><a href="/institute">Ruhi</a><a href="/about">About</a><SavedLink /><ThemeToggle /></nav>
         </header>
         <main className="hero">
           <Logo size={128} glow id="hero" />
@@ -168,6 +173,7 @@ export default function Phoenix() {
             </div>
             {chips}
           </form>
+          <TodayStrip />
           <FeatureCards />
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
             <div className="label">Try a theme</div>
@@ -194,7 +200,7 @@ export default function Phoenix() {
             <button className="go" type="submit" aria-label="Search" disabled={status === "loading"}><Arrow /></button>
           </div>
         </form>
-        <nav className="nav"><Install /><a href="/prayers">Prayers</a><a href="/institute">Ruhi</a><a href="/about">About</a><ThemeToggle /></nav>
+        <nav className="nav"><Install /><a href="/today">Today</a><a href="/prayers">Prayers</a><a href="/institute">Ruhi</a><a href="/about">About</a><SavedLink /><ThemeToggle /></nav>
       </header>
       <main className="results" aria-live="polite">
         {chips}
@@ -239,10 +245,35 @@ const ICONS = {
   prayers: <><path d="M12 3c-1.5 2-2 3.6-2 5a2 2 0 0 0 4 0c0-1.4-.5-3-2-5Z" /><path d="M7 21v-6.5a5 5 0 0 1 10 0V21" /><path d="M5 21h14" /></>,
   devotional: <><path d="M4 6h16M4 12h16M4 18h10" /><path d="m17 16 2 2 3-4" /></>,
   stories: <><path d="M4 5a2 2 0 0 1 2-2h11v16H6a2 2 0 0 0-2 2V5Z" /><path d="M8 7h6M8 11h6" /></>,
+  today: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>,
+  heart: <path d="M12 20.5s-7.5-4.6-9.3-9.2C1.4 7.8 3.6 4.5 7 4.5c2 0 3.5 1.1 5 3 1.5-1.9 3-3 5-3 3.4 0 5.6 3.3 4.3 6.8-1.8 4.6-9.3 9.2-9.3 9.2Z" />,
   ruhi: <><path d="M2 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H2Z" /><path d="M22 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8Z" /></>,
 };
 export function Icon({ name, size = 22 }) {
   return <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{ICONS[name]}</svg>;
+}
+
+// Home: today's Bahá’í date and what's next, linking to the Today page
+function TodayStrip() {
+  const [s, setS] = useState(null);
+  useEffect(() => {
+    const n = new Date(), t = ymd(n.getFullYear(), n.getMonth() + 1, n.getDate());
+    const b = badiDate(t);
+    if (!b) return;
+    const e = upcoming(t, 3).find((x) => x.kind !== "fast");
+    const d = e ? daysBetween(t, e.date) : null;
+    setS({ date: badiString(b), next: e ? `${e.name} ${d === 0 ? "today" : d === 1 ? "tomorrow" : `in ${d} days`}` : "" });
+  }, []);
+  return (
+    <a className="todaystrip" href="/today">
+      <span className="fic"><Icon name="today" /></span>
+      <span className="ftext">
+        <span className="ftitle">{s ? s.date : "Today"}</span>
+        <span className="fdesc">Today’s reading{s && s.next ? ` · ${s.next}` : ""}</span>
+      </span>
+      <Arrow />
+    </a>
+  );
 }
 
 const FEATURES = [
@@ -267,9 +298,9 @@ export function FeatureCards() {
 // Bottom tab bar on phones, like an app.
 const TABS = [
   { icon: "search", label: "Search", href: "/", is: (p, q) => p === "/" },
-  { icon: "prayers", label: "Prayers", href: "/prayers", is: (p, q) => p === "/prayers" && !/tab=(devotional|stories|songs)|devotional=|story=|findstory=|findsong=/.test(q) },
+  { icon: "today", label: "Today", href: "/today", is: (p) => p === "/today" },
+  { icon: "prayers", label: "Prayers", href: "/prayers", is: (p, q) => p === "/prayers" && !/tab=devotional|devotional=/.test(q) },
   { icon: "devotional", label: "Devotional", href: "/prayers?tab=devotional", is: (p, q) => p === "/prayers" && /tab=devotional|devotional=/.test(q) },
-  { icon: "stories", label: "Stories", href: "/prayers?tab=stories", is: (p, q) => p === "/prayers" && /tab=(stories|songs)|story=|findstory=|findsong=/.test(q) },
   { icon: "ruhi", label: "Ruhi", href: "/institute", is: (p) => p.startsWith("/institute") },
 ];
 export function BottomNav() {
