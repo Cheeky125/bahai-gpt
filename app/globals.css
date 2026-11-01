@@ -349,7 +349,7 @@ a.theme { text-decoration: none; display: inline-flex; align-items: center; min-
 .findermsg { font-family: var(--font-serif), Georgia, serif; font-size: clamp(28px, 7vw, 40px); line-height: 1.2; }
 .finder.facing .findermsg { color: var(--accentText); }
 .finderdial { width: min(86vw, 52vh, 380px); aspect-ratio: 1; }
-.finderdial svg { width: 100%; height: 100%; }
+.finderdial > svg { width: 100%; height: 100%; overflow: visible; }
 .fring { fill: var(--surface); stroke: var(--border2); stroke-width: 3; transition: stroke .3s; }
 .finder.facing .fring { stroke: var(--accent); stroke-width: 6; }
 .fnorth { fill: var(--accent); font-size: 22px; font-weight: 700; text-anchor: middle; font-family: var(--font-sans), system-ui, sans-serif; }
@@ -360,3 +360,30 @@ a.theme { text-decoration: none; display: inline-flex; align-items: center; min-
 .finderfoot { display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 80px; }
 .finderfoot p { margin: 0; font-size: 17px; color: var(--text); }
 .finderfoot p.small { font-size: 14px; color: var(--muted); max-width: 360px; }
+/* Qiblih compass — Draft B: ring of embers */
+.fember { fill: #F3701E; }
+.fglow { animation: fglow 2.4s ease-in-out infinite; }
+@keyframes fglow { 0%, 100% { opacity: .5 } 50% { opacity: .95 } }
+.fbird { animation: fbob 2.4s ease-in-out infinite; transform-origin: 150px 150px; }
+@keyframes fbob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
+.finder.facing .fbird { animation: frise .6s ease-out forwards; }
+@keyframes frise { to { transform: translateY(-14px) scale(1.12); } }
+.fwings { transform-box: fill-box; transform-origin: center bottom; animation: fflap 2s ease-in-out infinite; }
+@keyframes fflap { 0%, 100% { transform: scaleX(1) } 50% { transform: scaleX(.86) } }
+.finder.facing .fwings { animation: fspread .7s ease-in-out infinite alternate; }
+@keyframes fspread { from { transform: scaleX(1.05) } to { transform: scaleX(1.28) scaleY(1.06) } }
+.fpulse { fill: none; stroke: #F3701E; stroke-width: 3; animation: fpulse 1.6s ease-out infinite; }
+@keyframes fpulse { from { r: 30; opacity: .75 } to { r: 140; opacity: 0 } }
+.finder { background: radial-gradient(120% 80% at 50% 10%, #2A1209 0%, #0E0806 70%); color: #F5EDE6; }
+.finder.facing { background: radial-gradient(120% 90% at 50% 45%, #5A220B 0%, #1A0B05 75%); }
+.finder .label { color: #C4B3A8; }
+.finder.facing .findermsg { color: #FFB98A; }
+.finder .finderfoot p { color: #F5EDE6; }
+.finder .finderfoot p.small { color: #C4B3A8; }
+.finder .fme { fill: #F5EDE6; }
+.finder .fnorth { fill: #FFB98A; font-size: 18px; }
+.finder .iconbtn { background: #1E1410; color: #F5EDE6; border-color: #4A3428; }
+.finder .placepick input { color: #F5EDE6; }
+.qlaunch { font: inherit; cursor: pointer; border-color: var(--border); background: var(--surface); }
+.qcard svg { overflow: visible; }
+@media (prefers-reduced-motion: reduce) { .fglow, .fbird, .fwings, .fpulse { animation: none !important; } }

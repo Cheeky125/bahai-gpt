@@ -5,6 +5,7 @@ import Install from "./Install";
 import Feedback from "./Feedback";
 import { FavButton, SavedLink } from "./Saved";
 import { ShareButton } from "./Share";
+import { QiblihLauncher } from "./Qiblih";
 import { badiDate, badiString, upcoming, ymd, daysBetween } from "../lib/badi";
 
 const AUTHORS = [
@@ -174,6 +175,7 @@ export default function Phoenix() {
             {chips}
           </form>
           <TodayStrip />
+          <QiblihLauncher />
           <FeatureCards />
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
             <div className="label">Try a theme</div>
