@@ -411,3 +411,7 @@ a.theme { text-decoration: none; display: inline-flex; align-items: center; min-
 @keyframes fbglow { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
 @media (prefers-reduced-motion: reduce) { .firebadge * { animation: none !important; } }
 .firebadge.lit .fbnum { fill: url(#fbNum); font-weight: 700; }
+.streakchip { padding: 0; text-decoration: none; }
+.streakchip .fbnum { font-size: 36px; }
+.streakchip .fbflames { opacity: .35; }
+@media (max-width: 420px) { .nav { gap: 8px; } .header .iconbtn { width: 40px; height: 40px; } }

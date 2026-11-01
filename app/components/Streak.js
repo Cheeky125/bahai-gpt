@@ -35,13 +35,34 @@ export function FireBadge({ n, lit, size = 76 }) {
   );
 }
 
-export default function StreakCard() {
+// keeps up with marks made anywhere on the page (home card, header, obligatory page)
+function useStreak() {
   const [st, setSt] = useState(null);
   const [today, setToday] = useState(null);
   useEffect(() => {
-    setSt(load());
-    const [y, m, d] = todayIn(); setToday(keyOf(y, m, d));
+    const upd = () => { setSt(load()); const [y, m, d] = todayIn(); setToday(keyOf(y, m, d)); };
+    upd();
+    window.addEventListener("phoenix-op", upd); window.addEventListener("storage", upd);
+    return () => { window.removeEventListener("phoenix-op", upd); window.removeEventListener("storage", upd); };
   }, []);
+  return [st, setSt, today];
+}
+
+// Header: the fiery number next to the heart and the light/dark button
+export function StreakChip() {
+  const [st, , today] = useStreak();
+  if (!st || !today) return <span className="iconbtn streakchip" aria-hidden="true" />;
+  const { cur } = streaks(st.days, today);
+  const lit = done(st.days[today]);
+  return (
+    <a className="iconbtn streakchip" href="/obligatory" aria-label={`Prayer streak: ${cur} day${cur === 1 ? "" : "s"}${lit ? ", said today" : ", not yet today"}`} title="Prayer streak">
+      <FireBadge n={cur} lit={lit} size={34} />
+    </a>
+  );
+}
+
+export default function StreakCard() {
+  const [st, setSt, today] = useStreak();
   if (!st || !today) return null;
   const { cur, best } = streaks(st.days, today);
   const lit = done(st.days[today]);

@@ -1,7 +1,7 @@
 // Phoenix — obligatory prayer streak, kept only in this browser (localStorage).
 export const KEY = "phoenix-op";
 export const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || "null") || { choice: "short", days: {} }; } catch (e) { return { choice: "short", days: {} }; } };
-export const save = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} };
+export const save = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} try { window.dispatchEvent(new Event("phoenix-op")); } catch (e) {} };
 export const done = (d) => !!d && (d.short || d.long || (d.m && d.n && d.e));
 export const keyOf = (y, m, d) => `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 export const shift = (k, n) => new Date(Date.parse(k) + n * 86400000).toISOString().slice(0, 10);
