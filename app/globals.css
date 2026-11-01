@@ -336,3 +336,27 @@ a.theme { text-decoration: none; display: inline-flex; align-items: center; min-
 .rubric.heading { text-transform: uppercase; font-style: normal; letter-spacing: .06em; font-size: 12px; font-weight: 600; color: var(--faint); }
 .abl { margin: 8px 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; line-height: 1.5; }
 @media (max-width: 420px) { .slot { grid-template-columns: 70px 1fr; } .snote { grid-column: 2; } }
+/* Qiblih card + live compass */
+.qcard { display: flex; align-items: center; gap: 16px; width: 100%; text-align: left; padding: 12px; border-radius: 14px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit; cursor: pointer; }
+.qcard svg { flex: none; }
+.qcardtext { display: flex; flex-direction: column; gap: 4px; }
+.qcardtext strong { font-size: 18px; }
+@media (min-width: 641px) { .qcard:hover { border-color: var(--accent); } }
+.finder { position: fixed; inset: 0; z-index: 200; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: max(20px, env(safe-area-inset-top)) 20px max(28px, env(safe-area-inset-bottom)); text-align: center; transition: background .3s; }
+.finder.facing { background: var(--accentSoft); }
+.finderclose { position: absolute; top: max(14px, env(safe-area-inset-top)); right: 14px; }
+.finderhead { display: flex; flex-direction: column; gap: 8px; margin-top: 36px; }
+.findermsg { font-family: var(--font-serif), Georgia, serif; font-size: clamp(28px, 7vw, 40px); line-height: 1.2; }
+.finder.facing .findermsg { color: var(--accentText); }
+.finderdial { width: min(86vw, 52vh, 380px); aspect-ratio: 1; }
+.finderdial svg { width: 100%; height: 100%; }
+.fring { fill: var(--surface); stroke: var(--border2); stroke-width: 3; transition: stroke .3s; }
+.finder.facing .fring { stroke: var(--accent); stroke-width: 6; }
+.fnorth { fill: var(--accent); font-size: 22px; font-weight: 700; text-anchor: middle; font-family: var(--font-sans), system-ui, sans-serif; }
+.fme { fill: var(--text); }
+.farrow { fill: var(--accent); }
+.finder.facing .farrow { fill: var(--accentText); }
+.fhub { fill: var(--surface); stroke: var(--accent); stroke-width: 4; }
+.finderfoot { display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 80px; }
+.finderfoot p { margin: 0; font-size: 17px; color: var(--text); }
+.finderfoot p.small { font-size: 14px; color: var(--muted); max-width: 360px; }
