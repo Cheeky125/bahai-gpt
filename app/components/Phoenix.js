@@ -6,6 +6,7 @@ import Feedback from "./Feedback";
 import { FavButton, SavedLink } from "./Saved";
 import { ShareButton } from "./Share";
 import { QiblihLauncher } from "./Qiblih";
+import StreakCard from "./Streak";
 import { badiDate, badiString, upcoming, ymd, daysBetween } from "../lib/badi";
 
 const AUTHORS = [
@@ -175,6 +176,7 @@ export default function Phoenix() {
             {chips}
           </form>
           <TodayStrip />
+          <StreakCard />
           <QiblihLauncher />
           <FeatureCards />
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>

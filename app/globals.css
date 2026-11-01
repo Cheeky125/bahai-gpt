@@ -387,3 +387,27 @@ a.theme { text-decoration: none; display: inline-flex; align-items: center; min-
 .qlaunch { font: inherit; cursor: pointer; border-color: var(--border); background: var(--surface); }
 .qcard svg { overflow: visible; }
 @media (prefers-reduced-motion: reduce) { .fglow, .fbird, .fwings, .fpulse { animation: none !important; } }
+/* Home: fiery prayer streak */
+.streakcard { width: 100%; max-width: 680px; display: flex; align-items: center; gap: 14px; padding: 12px 16px 12px 12px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); text-align: left; }
+.streakcard.lit { border-color: var(--accent); background: linear-gradient(90deg, var(--accentSoft), var(--surface) 70%); }
+.streakbadge { flex: none; display: flex; text-decoration: none; }
+.streaktext { display: flex; flex-direction: column; gap: 4px; min-width: 0; align-items: flex-start; }
+.streaktext .ftitle { color: var(--text); text-decoration: none; }
+.streaktext .act { margin-top: 4px; min-height: 38px; padding: 8px 12px; }
+.firebadge { overflow: visible; }
+.fbring { fill: none; stroke: var(--border2); stroke-width: 3; }
+.fbinner { fill: var(--surface); }
+.fbnum { text-anchor: middle; font-family: var(--font-serif), Georgia, serif; font-size: 30px; font-weight: 600; fill: var(--faint); }
+.fbflames { opacity: .28; filter: saturate(.4); transition: opacity .4s; }
+.fbglow { opacity: .25; }
+.firebadge:not(.lit) .fbglow { animation: fbember 3s ease-in-out infinite; }
+@keyframes fbember { 0%, 100% { opacity: .12 } 50% { opacity: .32 } }
+.firebadge.lit .fbflames { opacity: 1; filter: none; animation: fbspin 18s linear infinite; transform-origin: 50px 50px; }
+.firebadge.lit .fbring { stroke: url(#fbFire); stroke: #F3701E; stroke-width: 4; }
+.firebadge.lit .fbglow { opacity: .9; animation: fbglow 2s ease-in-out infinite; }
+.firebadge.lit .fbflame { transform-box: fill-box; transform-origin: center bottom; animation: fbflick .9s ease-in-out infinite alternate; }
+@keyframes fbflick { from { transform: scaleY(.75) scaleX(1.05); } to { transform: scaleY(1.25) scaleX(.9); } }
+@keyframes fbspin { to { transform: rotate(360deg); } }
+@keyframes fbglow { 0%, 100% { opacity: .6 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: reduce) { .firebadge * { animation: none !important; } }
+.firebadge.lit .fbnum { fill: url(#fbNum); font-weight: 700; }
