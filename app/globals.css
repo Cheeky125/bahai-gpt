@@ -301,3 +301,38 @@ a.theme { text-decoration: none; display: inline-flex; align-items: center; min-
   /* already orange-bordered: make the ring a little stronger */
   :is(.todaystrip, .continue, .act.fav.on, .act.on, .chip[aria-pressed="true"]):hover { box-shadow: 0 0 0 1px var(--accent); }
 }
+
+/* Obligatory prayer */
+.streakrow { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
+.streaknum { display: flex; align-items: baseline; gap: 10px; color: var(--muted); }
+.streaknum .big { font-family: var(--font-serif), Georgia, serif; font-size: 48px; line-height: 1; color: var(--accentText); }
+.dots { display: grid; grid-template-columns: repeat(14, 1fr); gap: 6px; max-width: 360px; }
+.dot { aspect-ratio: 1; border-radius: 50%; background: var(--chip); }
+.dot.on { background: var(--accent); }
+.dot.today { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--accent); }
+.slots { display: flex; flex-direction: column; gap: 8px; }
+.slot { display: grid; grid-template-columns: 90px 1fr auto; gap: 8px; align-items: baseline; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); }
+.slot.on { border-color: var(--accent); background: var(--accentSoft); }
+.slot.past { opacity: .6; }
+.sname { font-weight: 600; font-size: 15px; }
+.stime { font-family: var(--font-serif), Georgia, serif; font-size: 18px; }
+.snote { font-size: 13px; color: var(--muted); }
+.slot.on .snote { color: var(--accentText); font-weight: 600; }
+.qiblih { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.qiblih svg { max-width: 100%; height: auto; }
+.qdial { fill: var(--bg); stroke: var(--border2); stroke-width: 2; transition: stroke .2s, fill .2s; }
+.qdial.on { stroke: var(--accent); fill: var(--accentSoft); stroke-width: 3; }
+.qtick { stroke: var(--faint); stroke-width: 1.5; }
+.qletter { fill: var(--muted); font-size: 16px; font-weight: 600; text-anchor: middle; font-family: var(--font-sans), system-ui, sans-serif; }
+.qletter.n { fill: var(--accent); }
+.qarrow { fill: var(--accent); }
+.qstem { stroke: var(--accent); stroke-width: 3; stroke-linecap: round; }
+.qhub { fill: var(--accent); }
+.qme { fill: var(--text); }
+.qtext { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.qtext strong { font-size: 18px; }
+.oprayer { gap: 14px; }
+.rubric { margin: 0; font-style: italic; color: var(--muted); font-size: 15px; line-height: 1.55; }
+.rubric.heading { text-transform: uppercase; font-style: normal; letter-spacing: .06em; font-size: 12px; font-weight: 600; color: var(--faint); }
+.abl { margin: 8px 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; line-height: 1.5; }
+@media (max-width: 420px) { .slot { grid-template-columns: 70px 1fr; } .snote { grid-column: 2; } }

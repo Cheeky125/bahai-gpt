@@ -6,10 +6,27 @@ import { Card, Icon } from "./Phoenix";
 import { useSaved } from "./Saved";
 import { badiDate, badiString, upcoming, holyDays, fast, ymd, toKey, daysBetween, fmtDate, addDays } from "../lib/badi";
 import { sunTimes, todayIn, fmtTime } from "../lib/sun";
+import { load as loadOp, done as opDone, keyOf, streaks } from "../lib/opstreak";
+
+// Obligatory prayer: streak and whether today's is said
+function OpCard() {
+  const [s, setS] = useState(null);
+  useEffect(() => {
+    const st = loadOp(), [y, m, d] = todayIn(), k = keyOf(y, m, d);
+    setS({ ...streaks(st.days, k), today: opDone(st.days[k]) });
+  }, []);
+  return (
+    <a className="continue" href="/obligatory">
+      <span className="label">Obligatory prayer</span>
+      <span>{!s ? "Prayers, times and the Qiblih" : s.today ? `✓ Said today · ${s.cur}-day streak` : s.cur ? `${s.cur}-day streak · not yet today` : "Prayers, today’s times and the Qiblih compass"}</span>
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m13 6 6 6-6 6" /></svg>
+    </a>
+  );
+}
 
 const PLACE_KEY = "phoenix-place";
-const getPlace = () => { try { return JSON.parse(localStorage.getItem(PLACE_KEY) || "null"); } catch (e) { return null; } };
-const setPlaceStore = (p) => { try { p ? localStorage.setItem(PLACE_KEY, JSON.stringify(p)) : localStorage.removeItem(PLACE_KEY); } catch (e) {} };
+export const getPlace = () => { try { return JSON.parse(localStorage.getItem(PLACE_KEY) || "null"); } catch (e) { return null; } };
+export const setPlaceStore = (p) => { try { p ? localStorage.setItem(PLACE_KEY, JSON.stringify(p)) : localStorage.removeItem(PLACE_KEY); } catch (e) {} };
 const devotional = (theme) => `/prayers?devotional=${encodeURIComponent(theme)}`;
 const inDays = (n) => (n === 0 ? "today" : n === 1 ? "tomorrow" : `in ${n} days`);
 
@@ -25,7 +42,7 @@ function useToday() {
 }
 
 // ---------- Sunrise / sunset ----------
-function Place({ place, setPlace }) {
+export function Place({ place, setPlace }) {
   const [mode, setMode] = useState(null); // null | "city" | "locating"
   const [q, setQ] = useState("");
   const [res, setRes] = useState({ status: "idle", list: [] });
@@ -165,6 +182,8 @@ export default function Today() {
           <a className="act primary" href={devotional(b.meaning)} style={{ alignSelf: "flex-start" }}>Devotional on “{b.meaning}”</a>
         </section>
       )}
+
+      <OpCard />
 
       <h2 className="sectitle">Readings for today</h2>
       <p className="note" style={{ marginTop: -8 }}>“Recite ye the verses of God every morn and eventide.” <span style={{ whiteSpace: "nowrap" }}>— Bahá’u’lláh, the Kitáb-i-Aqdas</span>. Everyone gets the same two passages today, from the Writings of Bahá’u’lláh and the Báb.</p>

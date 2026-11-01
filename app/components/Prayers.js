@@ -251,6 +251,11 @@ export default function Prayers({ groups }) {
           <button className="tab" role="tab" aria-selected={tab === "songs"} onClick={() => openSongs()}>Songs</button>
           <button className="tab" role="tab" aria-selected={tab === "devotional"} onClick={() => { setTab("devotional"); if (devo.status === "idle") setParams({ tab: "devotional" }); }}>Devotional</button>
         </div>
+        <a className="continue" href="/obligatory" style={{ marginTop: 4 }}>
+          <span className="label">Obligatory prayer</span>
+          <span>The three prayers, today’s times, the Qiblih compass and your streak</span>
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m13 6 6 6-6 6" /></svg>
+        </a>
       </main>
 
       {tab === "browse" && (
