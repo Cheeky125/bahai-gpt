@@ -13,7 +13,7 @@ const BOOKS = {
   aqdas: { title: "The Kitáb-i-Aqdas", by: "Bahá’u’lláh", langs: "AqdasLanguages", matrix: "AqdasMatrixByLanguages", original: 6 },
   pm: { title: "Prayers and Meditations", by: "Bahá’u’lláh", langs: "PMLanguages", matrix: "PMsMatrixByLanguages", original: 4 },
 };
-const CACHE = { headers: { "Cache-Control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400" } };
+const CACHE = { headers: { "Cache-Control": "public, max-age=600, s-maxage=86400, stale-while-revalidate=86400" } };
 
 export async function GET(req) {
   const p = new URL(req.url).searchParams;

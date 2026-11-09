@@ -44,7 +44,7 @@ export async function GET(req) {
     const map = await build();
     // ?check=1: the matches whose opening words differ, to review by hand
     if (new URL(req.url).searchParams.get("check")) return Response.json(cache.check.filter((c) => c.ours.split(" ").slice(0, 6).join(" ") !== c.theirs.split(" ").slice(0, 6).join(" ")));
-    return Response.json({ map, source: "BahaiPrayers.net" }, { headers: { "Cache-Control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400" } });
+    return Response.json({ map, source: "BahaiPrayers.net" }, { headers: { "Cache-Control": "public, max-age=600, s-maxage=86400, stale-while-revalidate=86400" } });
   } catch (e) {
     console.error(e);
     return Response.json({ map: {} }, { status: 200, headers: { "Cache-Control": "public, max-age=300" } });

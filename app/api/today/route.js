@@ -15,5 +15,5 @@ export async function GET(req) {
   const ids = [pick(0), pick(1)];
   const rows = await byIds(ids);
   const cards = shapeAll(ids.map((id) => rows.find((r) => r.id === id)).filter(Boolean));
-  return Response.json({ date: d, morning: cards[0] || null, evening: cards[1] || null }, { headers: { "Cache-Control": "public, max-age=3600, s-maxage=86400" } });
+  return Response.json({ date: d, morning: cards[0] || null, evening: cards[1] || null }, { headers: { "Cache-Control": "public, max-age=600, s-maxage=86400" } });
 }

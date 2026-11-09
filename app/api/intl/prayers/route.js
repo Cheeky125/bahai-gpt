@@ -25,7 +25,7 @@ export async function GET(req) {
     const themes = (sys.Tags || []).filter((t) => counts.get(t.Id)).map((t) => ({ id: t.Id, name: t.Name, count: counts.get(t.Id) }))
       .sort((a, b) => a.name.localeCompare(b.name, L.Culture || undefined));
     return Response.json({ language: L.Name, english: L.English, culture: L.Culture, rtl: !L.IsLeftToRight, themes, prayers },
-      { headers: { "Cache-Control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400" } });
+      { headers: { "Cache-Control": "public, max-age=600, s-maxage=86400, stale-while-revalidate=86400" } });
   } catch (e) {
     console.error(e);
     return Response.json({ error: "Couldn’t load prayers in that language right now." }, { status: 502 });
