@@ -2,6 +2,7 @@
 // Visits and page views are in Vercel Analytics; this page shows the clicks.
 import Logo from "../components/Logo";
 import { ThemeToggle } from "../components/Phoenix";
+import { notFound } from "next/navigation";
 
 export const metadata = { title: "Stats — Phoenix", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -28,6 +29,8 @@ async function stats(days) {
 
 export default async function Page({ searchParams }) {
   const p = await searchParams;
+  // Private: the page only exists with ?key= matching STATS_KEY (set in Vercel). Without it, it's a normal 404.
+  if (!process.env.STATS_KEY || p?.key !== process.env.STATS_KEY) notFound();
   const days = [1, 7, 30, 90].includes(+p?.days) ? +p.days : 7;
   let s = null, err = null;
   try { s = await stats(days); } catch (e) { err = String(e.message || e); }
@@ -46,7 +49,7 @@ export default async function Page({ searchParams }) {
         <h1>Stats</h1>
         <p className="note">What people click on Phoenix, counted anonymously. For visitors, page views, countries and devices, see <a href="https://vercel.com/terells-projects-bc735bbe/phoenix-writings/analytics" target="_blank" rel="noopener noreferrer">Vercel Analytics</a>.</p>
         <div className="chips left" role="group" aria-label="Time range">
-          {[[1, "Today"], [7, "7 days"], [30, "30 days"], [90, "90 days"]].map(([d, t]) => <a key={d} className="chip" aria-pressed={d === days} href={`/stats?days=${d}`}>{t}</a>)}
+          {[[1, "Today"], [7, "7 days"], [30, "30 days"], [90, "90 days"]].map(([d, t]) => <a key={d} className="chip" aria-pressed={d === days} href={`/stats?days=${d}&key=${encodeURIComponent(p.key)}`}>{t}</a>)}
         </div>
         {err && <p className="empty">Stats aren’t set up yet ({err.slice(0, 80)}). Run db/4_events.sql in Supabase.</p>}
         {s && (
