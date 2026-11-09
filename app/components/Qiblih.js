@@ -3,6 +3,7 @@
 // (Draft B: a ring of embers burning brightest toward the Qiblih, the phoenix in the middle).
 import { useEffect, useRef, useState } from "react";
 import { Place, getPlace, setPlaceStore } from "./Place";
+import { track } from "../lib/track";
 
 // 36 embers round the ring; the one at the top (toward the Qiblih) is biggest and brightest
 const EMBERS = Array.from({ length: 36 }, (_, i) => {
@@ -83,7 +84,7 @@ export function Finder({ place, setPlace, perm, onClose }) {
   const [heading, setHeading] = useState(null);
   const [status, setStatus] = useState("starting"); // starting | on | nocompass | denied
   const [loc, setLoc] = useState(place ? "ok" : "locating"); // ok | locating | failed
-  const angle = useRef(null), wasFacing = useRef(false);
+  const angle = useRef(null), wasFacing = useRef(false), counted = useRef(false);
   // the phone's location, if we don't have one yet
   useEffect(() => {
     if (place) { setLoc("ok"); return; }
@@ -126,7 +127,10 @@ export function Finder({ place, setPlace, perm, onClose }) {
   else angle.current += ((((target - angle.current) % 360) + 540) % 360) - 180;
   const diff = live ? ((((bearing - heading) % 360) + 540) % 360) - 180 : null;
   const facing = diff != null && Math.abs(diff) < 6;
-  useEffect(() => { if (facing && !wasFacing.current) { try { navigator.vibrate?.(80); } catch (e) {} } wasFacing.current = facing; }, [facing]);
+  useEffect(() => {
+    if (facing && !wasFacing.current) { try { navigator.vibrate?.(80); } catch (e) {} if (!counted.current) { counted.current = true; track("compass_facing"); } }
+    wasFacing.current = facing;
+  }, [facing]);
 
   return (
     <div className={`finder${facing ? " facing" : ""}`} role="dialog" aria-modal="true" aria-label="Qiblih compass">
@@ -187,7 +191,7 @@ export function QiblihLauncher() {
   const b = place ? bearingTo(place.lat, place.lon) : null;
   return (
     <>
-      <button className="todaystrip qlaunch" onClick={() => setFinder(askCompass())}>
+      <button className="todaystrip qlaunch" data-track="compass_open|home" onClick={() => setFinder(askCompass())}>
         <span className="fic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="m15.5 8.5-2 5-5 2 2-5 5-2Z" /></svg></span>
         <span className="ftext">
           <span className="ftitle">Find the Qiblih</span>

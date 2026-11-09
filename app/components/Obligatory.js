@@ -8,6 +8,7 @@ import { QiblihCard, Finder, askCompass } from "./Qiblih";
 import { sunTimes, todayIn, fmtTime } from "../lib/sun";
 
 import { load, save, done, keyOf, shift, streaks } from "../lib/opstreak";
+import { track } from "../lib/track";
 
 // ---------- times ----------
 function Times({ place, choice }) {
@@ -56,7 +57,8 @@ export default function Obligatory() {
   const update = (fn) => { const n = { ...st, days: { ...st.days } }; fn(n); save(n); setSt(n); };
   const choice = st.choice || "short";
   const day = st.days[today] || {};
-  const mark = (k) => update((n) => { const cur = { ...(n.days[today] || {}) }; if (cur[k]) delete cur[k]; else cur[k] = Date.now(); if (Object.keys(cur).length) n.days[today] = cur; else delete n.days[today]; });
+  const mark = (k) => update((n) => {
+    if (!(n.days[today] || {})[k]) track("prayer_marked", `${OB.prayers[n.choice || "short"].name}${k.length === 1 ? ` (${{ m: "morning", n: "noon", e: "evening" }[k]})` : ""}`); const cur = { ...(n.days[today] || {}) }; if (cur[k]) delete cur[k]; else cur[k] = Date.now(); if (Object.keys(cur).length) n.days[today] = cur; else delete n.days[today]; });
   const { cur, best } = streaks(st.days, today);
   const last28 = [...Array(28)].map((_, i) => shift(today, i - 27));
   const P = OB.prayers[choice];
@@ -69,7 +71,7 @@ export default function Obligatory() {
 
       <div className="tabs" role="tablist" aria-label="Which prayer">
         {Object.entries(OB.prayers).map(([k, p]) => (
-          <button key={k} className="tab" role="tab" aria-selected={choice === k} onClick={() => update((n) => { n.choice = k; })}>{p.name}</button>
+          <button key={k} className="tab" role="tab" aria-selected={choice === k} onClick={() => { track("obligatory_choice", p.name); update((n) => { n.choice = k; }); }}>{p.name}</button>
         ))}
       </div>
       <p className="note" style={{ marginTop: -6, fontSize: 14 }}>{P.when}.</p>
@@ -107,7 +109,7 @@ export default function Obligatory() {
       {/* qiblih */}
       <section className="tcard2">
         <div className="tlabel">The Qiblih</div>
-        <QiblihCard place={place} onOpen={() => setFinder(askCompass())} />
+        <QiblihCard place={place} onOpen={() => { track("compass_open", "obligatory page"); setFinder(askCompass()); }} />
       </section>
 
       {finder && <Finder place={place} setPlace={setPlace} perm={finder} onClose={() => setFinder(null)} />}

@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { track } from "../lib/track";
 
 // "Send feedback" — a small form that sends a note (with the page and search it came from) to Phoenix's
 // feedback table. Contact details are optional.
@@ -15,7 +16,7 @@ export default function Feedback({ query, label = "Send feedback" }) {
       const r = await fetch("/api/feedback", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: msg, contact, query: query || "", page: window.location.pathname + window.location.search }) });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || "Couldn’t send");
-      setSt({ status: "sent" }); setMsg(""); setContact("");
+      setSt({ status: "sent" }); setMsg(""); setContact(""); track("feedback");
     } catch (err) { setSt({ status: "error", error: err.message }); }
   };
   if (!open) return <button className="fbbtn" onClick={() => { setOpen(true); setSt({ status: "idle" }); }}>{label}</button>;

@@ -9,6 +9,7 @@ import { QiblihLauncher } from "./Qiblih";
 import { useVideos, ListenToggle, Player } from "./Listen";
 import StreakCard from "./Streak";
 import { badiDate, badiString, upcoming, ymd, daysBetween } from "../lib/badi";
+import { track } from "../lib/track";
 
 const AUTHORS = [
   ["", "All authors"],
@@ -89,7 +90,7 @@ export function Card({ r, n, label, expanded, hideRuhi }) {
           {vids.length > 0 && <ListenToggle on={play} onClick={() => setPlay(!play)} />}
           <FavButton r={r} />
           <ShareButton r={r} label="Image" />
-          <button className="act" onClick={copy}>
+          <button className="act" onClick={copy} data-track={`copy|${r.prayer ? "prayer" : r.story ? "story" : "passage"}`}>
             <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>
             {copied ? "Copied" : "Copy"}
           </button>
@@ -127,6 +128,7 @@ export default function Phoenix() {
       const r = await fetch("/api/search", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ q: text, author: who }) });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || "Search failed");
+      track("search", j.type || "topic");
       setState({ status: "done", results: j.results || [], answer: j.answer || null, verified: !!j.verified, ruhiBook: j.ruhiBook || null, error: null, query: text });
     } catch (e) {
       setState({ status: "error", results: [], error: e.message, query: text });
@@ -275,7 +277,7 @@ function TodayStrip() {
     setS({ date: badiString(b), next: e ? `${e.name} ${d === 0 ? "today" : d === 1 ? "tomorrow" : `in ${d} days`}` : "" });
   }, []);
   return (
-    <a className="todaystrip" href="/today">
+    <a className="todaystrip" href="/today" data-track="today_card">
       <span className="fic"><Icon name="today" /></span>
       <span className="ftext">
         <span className="ftitle">{s ? s.date : "Today"}</span>

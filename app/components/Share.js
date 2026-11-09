@@ -145,8 +145,8 @@ export function ShareImage({ r, text, onClose }) {
         </div>
         <div className={`sharepreview ${shape}`}>{url ? <img src={url} alt="Preview of the image" /> : <div className="skeleton" style={{ height: "100%" }} />}</div>
         <div className="actions" style={{ justifyContent: "center" }}>
-          <button className="act primary" onClick={share} disabled={!url || busy}>Share</button>
-          <button className="act" onClick={() => save()} disabled={!url}>Save image</button>
+          <button className="act primary" onClick={share} disabled={!url || busy} data-track={`share_image|${shape}`}>Share</button>
+          <button className="act" onClick={() => save()} disabled={!url} data-track={`save_image|${shape}`}>Save image</button>
         </div>
       </div>
     </div>
@@ -157,7 +157,7 @@ export function ShareButton({ r, text, label = "Share image" }) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button className="act" onClick={() => setOpen(true)}>
+      <button className="act" onClick={() => setOpen(true)} data-track="share_open">
         <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="3" /><circle cx="9" cy="9" r="2" /><path d="m21 15-4.5-4.5L7 20" /></svg>
         {label}
       </button>

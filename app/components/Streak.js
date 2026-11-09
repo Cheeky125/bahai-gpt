@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { load, save, done, keyOf, streaks } from "../lib/opstreak";
 import { todayIn } from "../lib/sun";
+import { track } from "../lib/track";
 
 const NAMES = { short: "Short", medium: "Medium", long: "Long" };
 
@@ -69,6 +70,7 @@ export default function StreakCard() {
   const choice = st.choice || "short";
   const used = Object.keys(st.days).length > 0;
   const markToday = () => {
+    track("prayer_marked", `${NAMES[choice]} (home)`);
     const n = { ...st, days: { ...st.days, [today]: { ...(st.days[today] || {}), [choice]: Date.now() } } };
     save(n); setSt(n);
   };

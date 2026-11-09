@@ -1,6 +1,7 @@
 "use client";
 // Phoenix — read a book of Bahá’u’lláh in two languages side by side (from BahaiPrayers.net).
 import { useEffect, useState } from "react";
+import { track } from "../lib/track";
 
 const STEP = 30;
 const setUrl = (book, a, b) => { const u = new URL(window.location.href); u.searchParams.set("book", book); u.searchParams.set("a", a); u.searchParams.set("b", b); window.history.replaceState({}, "", u); };
@@ -31,7 +32,7 @@ export default function Bilingual() {
     setUrl(sel.book, sel.a, sel.b);
     setD({ status: "loading" }); setLimit(STEP);
     fetch(`/api/bilingual?book=${sel.book}&a=${sel.a}&b=${sel.b}`).then((r) => r.json())
-      .then((j) => setD(j.error ? { status: "error", error: j.error } : { status: "done", ...j }))
+      .then((j) => { setD(j.error ? { status: "error", error: j.error } : { status: "done", ...j }); if (!j.error) track("read_pair", `${j.book.replace(/^The /, "")}: ${j.nameA} + ${j.nameB}`); })
       .catch(() => setD({ status: "error", error: "Couldn’t load that book right now." }));
   }, [sel]);
 

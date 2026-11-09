@@ -1,6 +1,7 @@
 import { Inter, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
+import Tracker from "./components/Tracker";
 
 const sans = Inter({ subsets: ["latin", "latin-ext"], variable: "--font-sans", display: "swap" });
 const serif = Source_Serif_4({ subsets: ["latin", "latin-ext"], variable: "--font-serif", display: "swap" });
@@ -31,7 +32,7 @@ export default function RootLayout({ children }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body>{children}<Analytics /></body>
+      <body>{children}<Analytics /><Tracker /></body>
     </html>
   );
 }

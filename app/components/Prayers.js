@@ -4,7 +4,8 @@ import Logo from "./Logo";
 import Install from "./Install";
 import { Card, ThemeToggle, Footer, Glass, Arrow } from "./Phoenix";
 import { SavedLink } from "./Saved";
-import IntlPrayers, { LanguagePicker } from "./IntlPrayers";
+import IntlPrayers, { LanguagePicker, loadLanguages } from "./IntlPrayers";
+import { track } from "../lib/track";
 
 const DEVO_THEMES = ["Unity", "Service", "Detachment", "Hope", "Gratitude", "Justice", "Healing", "Love of God", "Tests and difficulties", "Children and youth"];
 
@@ -102,6 +103,7 @@ export default function Prayers({ groups }) {
   }, []);
   const setLang = (l) => {
     setLangState(l);
+    loadLanguages().then((ls) => track("language", l === "en" ? "English" : ls.find((x) => String(x.id) === l)?.english || l));
     try { localStorage.setItem("phoenix-lang", l); } catch (e) {}
     const u = new URL(window.location.href);
     if (l === "en") u.searchParams.delete("lang"); else u.searchParams.set("lang", l);
@@ -133,6 +135,7 @@ export default function Prayers({ groups }) {
   const [gTag, setGTag] = useState("");
 
   const openTheme = async (name, push = true) => {
+    track("prayer_theme", name);
     setTheme(name); setSub(""); setLimit(25); setFound({ status: "idle", results: [], query: "" });
     if (push) setParams({ theme: name });
     setList({ status: "loading", prayers: [] });
@@ -160,6 +163,7 @@ export default function Prayers({ groups }) {
   const build = async (text, s = 0, push = true, useCounts = counts) => {
     const t = text.trim();
     if (t.length < 2) return;
+    track("devotional", t);
     if (PARTS.every((p) => !useCounts[p.key])) { setTab("devotional"); setDevo({ status: "error", error: "Choose at least one prayer, reading, story or song in Customize." }); return; }
     setTab("devotional"); setDevTheme(t); setSeed(s); setCopied(false);
     if (push) setParams({ devotional: t });
@@ -180,6 +184,7 @@ export default function Prayers({ groups }) {
   };
   const openStories = (push = true) => { setTab("stories"); setStory({ status: "idle" }); setSFound({ status: "idle", results: [], query: "" }); loadStories(); if (push) setParams({ tab: "stories" }); };
   const openStory = async (id, push = true) => {
+    track("story_open", id);
     setTab("stories"); loadStories(); setSFound({ status: "idle", results: [], query: "" });
     if (push) setParams({ story: id });
     setStory({ status: "loading" });
@@ -424,7 +429,7 @@ export default function Prayers({ groups }) {
               <p className="note">{list.length} songs</p>
               <div className="songlist">
                 {list.map((sg) => (
-                  <a key={sg.slug} className="songrow" href={sg.url} target="_blank" rel="noopener noreferrer">
+                  <a key={sg.slug} className="songrow" data-track={`song_open|${sg.title}`} href={sg.url} target="_blank" rel="noopener noreferrer">
                     <span className="st">{sg.title}</span>
                     <span className="sm">{[sg.by, gLang !== "English" ? sg.lang.join(" / ") : null].filter(Boolean).join(" · ")}</span>
                   </a>

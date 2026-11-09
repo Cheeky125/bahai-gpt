@@ -3,6 +3,7 @@
 // words each section quotes from the Writings, cut exactly where the book cuts them. Practice mode helps
 // memorize those quotes (first words, fill in the blanks, first letters). Progress stays on this device.
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { track } from "../lib/track";
 
 const MEM_KEY = "phoenix-ruhi-mem";
 const LAST_KEY = "phoenix-ruhi-last";
@@ -294,6 +295,7 @@ export default function RuhiStudy({ books, later }) {
   }, [view.b, view.u, s, view.mode, data.status]);
 
   const open = (b, u, sec, mode) => {
+    track("ruhi_unit", `Book ${b} Unit ${u}`);
     const v = { b, u, s: sec || null, mode: mode || "study" };
     setView(v); setUrl({ b, u, s: sec, mode: mode === "practice" ? "practice" : null }, true);
     window.scrollTo(0, 0);
@@ -304,6 +306,7 @@ export default function RuhiStudy({ books, later }) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [view.b, view.u]);
   const setMode = (mode) => {
+    if (mode === "practice") track("ruhi_practice", `Book ${view.b} Unit ${view.u}`);
     setView((v) => ({ ...v, mode }));
     setUrl({ b: view.b, u: view.u, s, mode: mode === "practice" ? "practice" : null }, false);
   };
