@@ -60,7 +60,7 @@ export default function IntlPrayers({ lang }) {
       {(theme || q) && <button className="back" onClick={() => { setTheme(null); setQ(""); }}>← All themes</button>}
       {!theme && !q && (
         <>
-          <p className="note" style={{ fontSize: 14 }}>{d.prayers.length} prayers in {d.language}{sung ? `, ${sung} with a sung version` : ""}. Themes as BahaiPrayers.net arranges them in this language.</p>
+          <p className="note" style={{ fontSize: 14 }}>{d.prayers.length} prayers in {d.english}{d.language !== d.english ? <> (<bdi lang={d.culture}>{d.language}</bdi>)</> : null}{sung ? `, ${sung} with a sung version` : ""}. Themes as BahaiPrayers.net arranges them in this language.</p>
           <div className="tgrid" dir={dir} lang={d.culture}>
             {d.themes.map((t) => (
               <button key={t.id} className="tcard" onClick={() => { setTheme(t.id); setLimit(25); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
