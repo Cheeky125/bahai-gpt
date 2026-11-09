@@ -16,7 +16,7 @@ async function build() {
   for (const p of sys.Prayers || []) {
     const links = [...(p.Urls || []).map((u) => u.Url || u.Link), ...(sys.Urls || []).filter((u) => u.PrayerId === p.Id).map((u) => u.Link)];
     const vids = [...new Set(links.map(youtubeId).filter(Boolean))];
-    if (vids.length) theirs.push({ sh: shingles(norm(p.Text)), vids, len: norm(p.Text).length, start: norm(p.Text).slice(0, 10).join(" ") });
+    if (vids.length) theirs.push({ sh: shingles(norm(p.Text)), vids, len: norm(p.Text).length, start: norm(p.Text).slice(0, 10).join(" "), head: " " + norm(p.Text).slice(0, 25).join(" ") + " " });
   }
   const index = new Map();
   theirs.forEach((t, i) => t.sh.forEach((s) => { if (!index.has(s)) index.set(s, []); index.get(s).push(i); }));
@@ -28,7 +28,9 @@ async function build() {
     let best = -1, n = 0;
     for (const [i, v] of votes) if (v > n) { best = i; n = v; }
     // enough of the opening words in common, and roughly the same length
-    if (best >= 0 && n >= 6 && Math.abs(theirs[best].len - w.length) <= Math.max(25, w.length * 0.35)) {
+    // a strong match, or a weaker one whose opening words appear near the start of theirs (after a heading)
+    const opens = best >= 0 && theirs[best].head.includes(" " + w.slice(0, 6).join(" ") + " ");
+    if (best >= 0 && (n >= 10 || (n >= 6 && opens)) && Math.abs(theirs[best].len - w.length) <= Math.max(25, w.length * 0.35)) {
       map[p.id] = theirs[best].vids.slice(0, 6);
       check.push({ id: p.id, votes: n, ours: w.slice(0, 10).join(" "), theirs: theirs[best].start, lens: [w.length, theirs[best].len] });
     }
