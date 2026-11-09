@@ -38,6 +38,9 @@ export function cleanHtml(html) {
       return m.startsWith("</") ? (h === "br" ? "" : `</${h}>`) : h === "br" ? "<br>" : `<${h}>`;
     })
     .replace(/<p>\s*<\/p>/g, "")
-    .replace(/[<>](?![a-z/])/g, (c) => (c === "<" ? "&lt;" : "&gt;"))
+    // anything left that looks like < or > is text, not markup
+    .split(/(<\/?(?:p|h3|h4|em|i|b|strong|sup)>|<br>)/)
+    .map((x, i) => (i % 2 ? x : x.replace(/</g, "&lt;").replace(/>/g, "&gt;")))
+    .join("")
     .trim();
 }

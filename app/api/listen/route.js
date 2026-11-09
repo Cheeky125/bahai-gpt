@@ -16,11 +16,11 @@ async function build() {
   for (const p of sys.Prayers || []) {
     const links = [...(p.Urls || []).map((u) => u.Url || u.Link), ...(sys.Urls || []).filter((u) => u.PrayerId === p.Id).map((u) => u.Link)];
     const vids = [...new Set(links.map(youtubeId).filter(Boolean))];
-    if (vids.length) theirs.push({ sh: shingles(norm(p.Text)), vids, len: norm(p.Text).length });
+    if (vids.length) theirs.push({ sh: shingles(norm(p.Text)), vids, len: norm(p.Text).length, start: norm(p.Text).slice(0, 10).join(" ") });
   }
   const index = new Map();
   theirs.forEach((t, i) => t.sh.forEach((s) => { if (!index.has(s)) index.set(s, []); index.get(s).push(i); }));
-  const map = {};
+  const map = {}, check = [];
   for (const p of PRAYERS) {
     const w = norm(p.text);
     const votes = new Map();
@@ -28,15 +28,20 @@ async function build() {
     let best = -1, n = 0;
     for (const [i, v] of votes) if (v > n) { best = i; n = v; }
     // enough of the opening words in common, and roughly the same length
-    if (best >= 0 && n >= 6 && Math.abs(theirs[best].len - w.length) <= Math.max(25, w.length * 0.35)) map[p.id] = theirs[best].vids.slice(0, 6);
+    if (best >= 0 && n >= 6 && Math.abs(theirs[best].len - w.length) <= Math.max(25, w.length * 0.35)) {
+      map[p.id] = theirs[best].vids.slice(0, 6);
+      check.push({ id: p.id, votes: n, ours: w.slice(0, 10).join(" "), theirs: theirs[best].start, lens: [w.length, theirs[best].len] });
+    }
   }
-  cache = { at: Date.now(), map };
+  cache = { at: Date.now(), map, check };
   return map;
 }
 
-export async function GET() {
+export async function GET(req) {
   try {
     const map = await build();
+    // ?check=1: the matches whose opening words differ, to review by hand
+    if (new URL(req.url).searchParams.get("check")) return Response.json(cache.check.filter((c) => c.ours.split(" ").slice(0, 6).join(" ") !== c.theirs.split(" ").slice(0, 6).join(" ")));
     return Response.json({ map, source: "BahaiPrayers.net" }, { headers: { "Cache-Control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400" } });
   } catch (e) {
     console.error(e);
