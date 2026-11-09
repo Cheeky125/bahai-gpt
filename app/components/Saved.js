@@ -9,7 +9,7 @@ const write = (list) => {
   try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) {}
   window.dispatchEvent(new Event("phoenix-saved"));
 };
-const FIELDS = ["id", "text", "excerpt", "author", "book", "section", "para", "citation", "onBehalf", "url", "prayer", "story", "theme", "kind"];
+const FIELDS = ["id", "text", "excerpt", "author", "book", "section", "para", "citation", "onBehalf", "url", "prayer", "story", "theme", "kind", "rtl", "lang", "videos", "source"];
 
 export function useSaved() {
   const [list, setList] = useState([]);

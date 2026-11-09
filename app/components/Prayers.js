@@ -4,6 +4,7 @@ import Logo from "./Logo";
 import Install from "./Install";
 import { Card, ThemeToggle, Footer, Glass, Arrow } from "./Phoenix";
 import { SavedLink } from "./Saved";
+import IntlPrayers, { LanguagePicker } from "./IntlPrayers";
 
 const DEVO_THEMES = ["Unity", "Service", "Detachment", "Hope", "Gratitude", "Justice", "Healing", "Love of God", "Tests and difficulties", "Children and youth"];
 
@@ -92,6 +93,20 @@ function setParams(obj) {
 
 export default function Prayers({ groups }) {
   const [tab, setTab] = useState("browse");
+  // "en" = Phoenix's own English library; otherwise a BahaiPrayers.net language id
+  const [lang, setLangState] = useState("en");
+  useEffect(() => {
+    let l = new URLSearchParams(window.location.search).get("lang");
+    if (!l) { try { l = localStorage.getItem("phoenix-lang"); } catch (e) {} }
+    if (l && /^(en|\d{1,3})$/.test(l)) setLangState(l);
+  }, []);
+  const setLang = (l) => {
+    setLangState(l);
+    try { localStorage.setItem("phoenix-lang", l); } catch (e) {}
+    const u = new URL(window.location.href);
+    if (l === "en") u.searchParams.delete("lang"); else u.searchParams.set("lang", l);
+    window.history.replaceState({}, "", u);
+  };
   const [theme, setTheme] = useState(null);
   const [list, setList] = useState({ status: "idle", prayers: [] });
   const [sub, setSub] = useState("");
@@ -244,7 +259,7 @@ export default function Prayers({ groups }) {
       <Header />
       <main className="ptop">
         <h1>Prayers, Stories &amp; Songs</h1>
-        <p>Nearly 500 prayers, each shown in full, word for word. Stories of the early believers from ‘Abdu’l-Bahá and from <em>The Dawn-Breakers</em>. Over 300 songs to sing together. Or build a whole devotional on any theme in one tap.</p>
+        <p>Nearly 500 prayers, each shown in full, word for word — and prayers in over 100 other languages. Stories of the early believers from ‘Abdu’l-Bahá and from <em>The Dawn-Breakers</em>. Over 300 songs to sing together. Or build a whole devotional on any theme in one tap.</p>
         <div className="tabs" role="tablist" aria-label="Prayers or devotional">
           <button className="tab" role="tab" aria-selected={tab === "browse"} onClick={() => { setTab("browse"); if (!theme && found.status === "idle") setParams({}); }}>Prayers</button>
           <button className="tab" role="tab" aria-selected={tab === "stories"} onClick={() => openStories()}>Stories</button>
@@ -258,8 +273,16 @@ export default function Prayers({ groups }) {
         </a>
       </main>
 
-      {tab === "browse" && (
+      {tab === "browse" && lang !== "en" && (
         <section className="results" aria-live="polite">
+          <LanguagePicker value={lang} onChange={setLang} />
+          <IntlPrayers lang={lang} />
+        </section>
+      )}
+
+      {tab === "browse" && lang === "en" && (
+        <section className="results" aria-live="polite">
+          <LanguagePicker value={lang} onChange={setLang} />
           <form className="search" role="search" onSubmit={(e) => { e.preventDefault(); findPrayer(q); }} style={{ maxWidth: "none" }}>
             <label htmlFor="pq" className="sr">Find a prayer</label>
             <div className="searchbox small">

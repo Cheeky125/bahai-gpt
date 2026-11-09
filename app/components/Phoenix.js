@@ -6,6 +6,7 @@ import Feedback from "./Feedback";
 import { FavButton, SavedLink } from "./Saved";
 import { ShareButton } from "./Share";
 import { QiblihLauncher } from "./Qiblih";
+import { useVideos, ListenToggle, Player } from "./Listen";
 import StreakCard from "./Streak";
 import { badiDate, badiString, upcoming, ymd, daysBetween } from "../lib/badi";
 
@@ -58,6 +59,8 @@ export function Card({ r, n, label, expanded, hideRuhi }) {
   // r.excerpt: the words a Ruhi book quotes from this passage, cut where the book cuts them
   const long = !!r.excerpt || r.text.length > 1100;
   const [open, setOpen] = useState(expanded || !long);
+  const vids = useVideos(r);
+  const [play, setPlay] = useState(false);
   const copy = async () => {
     const txt = `“${r.text}”\n— ${r.author || "Compilation"}, ${sourceLine(r)}${r.onBehalf ? " (letter written on behalf)" : ""}\n${r.url}`;
     try { await navigator.clipboard.writeText(txt); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch (e) {}
@@ -66,7 +69,7 @@ export function Card({ r, n, label, expanded, hideRuhi }) {
     <article className="card" id={`p${n}`}>
       {n != null && <span className="num" aria-hidden="true">{n}</span>}
       {label && <div className="label cardlabel">{label}</div>}
-      <blockquote className={`quote${open || r.excerpt ? "" : " clipped"}`}>{r.excerpt && !open ? r.excerpt : r.text}</blockquote>
+      <blockquote className={`quote${open || r.excerpt ? "" : " clipped"}`} dir={r.rtl ? "rtl" : undefined} lang={r.lang || undefined}>{r.excerpt && !open ? r.excerpt : r.text}</blockquote>
       {long && !expanded && <button className="act more inline" onClick={() => setOpen(!open)} aria-expanded={open}>{open ? (r.excerpt ? "Show only the quote" : "Show less") : r.excerpt ? "Show the full passage" : r.prayer ? "Show full prayer" : r.story ? "Read the whole story" : "Show full passage"}</button>}
       <div className="meta">
         <div>
@@ -83,18 +86,20 @@ export function Card({ r, n, label, expanded, hideRuhi }) {
           )}
         </div>
         <div className="actions">
+          {vids.length > 0 && <ListenToggle on={play} onClick={() => setPlay(!play)} />}
           <FavButton r={r} />
           <ShareButton r={r} label="Image" />
           <button className="act" onClick={copy}>
             <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>
             {copied ? "Copied" : "Copy"}
           </button>
-          <a className="act link" href={r.url} target="_blank" rel="noopener noreferrer">
-            bahai.org
+          {r.url && <a className="act link" href={r.url} target="_blank" rel="noopener noreferrer">
+            {r.source || "bahai.org"}
             <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M8 7h9v9" /></svg>
-          </a>
+          </a>}
         </div>
       </div>
+      {play && vids.length > 0 && <Player vids={vids} />}
     </article>
   );
 }
@@ -249,6 +254,7 @@ const ICONS = {
   prayers: <><path d="M12 3c-1.5 2-2 3.6-2 5a2 2 0 0 0 4 0c0-1.4-.5-3-2-5Z" /><path d="M7 21v-6.5a5 5 0 0 1 10 0V21" /><path d="M5 21h14" /></>,
   devotional: <><path d="M4 6h16M4 12h16M4 18h10" /><path d="m17 16 2 2 3-4" /></>,
   stories: <><path d="M4 5a2 2 0 0 1 2-2h11v16H6a2 2 0 0 0-2 2V5Z" /><path d="M8 7h6M8 11h6" /></>,
+  read: <><path d="M2 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H2Z" /><path d="M22 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8Z" /><path d="M5 9h3M5 12h3M16 9h3M16 12h3" /></>,
   today: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>,
   heart: <path d="M12 20.5s-7.5-4.6-9.3-9.2C1.4 7.8 3.6 4.5 7 4.5c2 0 3.5 1.1 5 3 1.5-1.9 3-3 5-3 3.4 0 5.6 3.3 4.3 6.8-1.8 4.6-9.3 9.2-9.3 9.2Z" />,
   ruhi: <><path d="M2 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H2Z" /><path d="M22 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8Z" /></>,
@@ -285,6 +291,8 @@ const FEATURES = [
   { icon: "devotional", title: "Build a devotional", text: "Pick a theme; get prayers, readings, a story and a song, ready to share.", href: "/prayers?tab=devotional" },
   { icon: "stories", title: "Stories & songs", text: "The Dawn-Breakers, Memorials of the Faithful, and 300+ songs to sing.", href: "/prayers?tab=stories" },
   { icon: "ruhi", title: "Ruhi companion", text: "Every quote in each unit of Books 1–8, section by section.", href: "/institute" },
+  { icon: "prayers", title: "Obligatory prayer", text: "The three prayers, today’s times, the Qiblih compass and your streak.", href: "/obligatory" },
+  { icon: "read", title: "Read side by side", text: "The Hidden Words, Aqdas, Íqán and more in two languages — even the original.", href: "/read" },
 ];
 export function FeatureCards() {
   return (

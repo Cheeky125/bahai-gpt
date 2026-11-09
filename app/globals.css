@@ -415,3 +415,37 @@ a.theme { text-decoration: none; display: inline-flex; align-items: center; min-
 .streakchip .fbnum { font-size: 36px; }
 .streakchip .fbflames { opacity: .35; }
 @media (max-width: 420px) { .nav { gap: 8px; } .header .iconbtn { width: 40px; height: 40px; } }
+
+/* Languages */
+.langpick { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; padding: 0 12px; min-height: 44px; border-radius: 12px; border: 1px solid var(--border2); background: var(--surface); color: var(--muted); }
+.langpick select, .bipick select { font: inherit; font-size: 15px; color: var(--text); background: transparent; border: 0; min-height: 42px; max-width: 70vw; cursor: pointer; }
+.langpick select:focus-visible, .bipick select:focus-visible { outline: none; }
+@media (min-width: 641px) { .langpick:hover, .bipick select:hover { border-color: var(--accent); } }
+.searchbox input[lang], .quote[dir="rtl"] { unicode-bidi: plaintext; }
+.quote[dir="rtl"] { font-size: 1.12em; line-height: 1.9; text-align: right; }
+.tgrid[dir="rtl"] .tcard { text-align: right; }
+/* Sung prayers */
+.ytbox { display: flex; flex-direction: column; gap: 8px; }
+.ytwrap { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: #000; }
+.ytwrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.ytfoot { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.ytfoot .note { font-size: 12px; }
+/* Side by side */
+.ptop.wide { max-width: 1040px; }
+.bipick { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bipick select { border: 1px solid var(--border2); border-radius: 12px; padding: 0 10px; background: var(--surface); }
+.bihead { display: none; }
+.birow { display: flex; gap: 12px; padding: 16px 0; border-top: 1px solid var(--divider); }
+.binum { flex: none; width: 40px; font-size: 13px; color: var(--accentText); font-weight: 600; padding-top: 4px; }
+.bicols { flex: 1; display: grid; grid-template-columns: 1fr; gap: 12px; min-width: 0; }
+.bitext { font-family: var(--font-serif), Georgia, serif; font-size: 17px; line-height: 1.65; overflow-wrap: anywhere; }
+.bitext p { margin: 0 0 .7em; }
+.bitext p:last-child { margin-bottom: 0; }
+.bitext h3 { font-size: 15px; letter-spacing: .04em; text-transform: uppercase; margin: 0 0 .5em; color: var(--muted); font-family: var(--font-sans), system-ui, sans-serif; }
+.bitext.b { color: var(--muted); }
+.bitext[dir="rtl"] { font-size: 19px; line-height: 1.95; text-align: right; }
+@media (min-width: 760px) {
+  .bicols { grid-template-columns: 1fr 1fr; gap: 28px; }
+  .bihead { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; padding-left: 52px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+  .bitext.b { color: var(--text); }
+}

@@ -33,7 +33,7 @@ function wrap(ctx, text, width) {
 let logoImg = null;
 const loadLogo = () => logoImg || (logoImg = new Promise((res) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(LOGO); }));
 
-export async function drawShare(canvas, { text, author, source }, shape) {
+export async function drawShare(canvas, { text, author, source, rtl }, shape) {
   const [W, H] = SIZES[shape];
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext("2d");
@@ -80,9 +80,11 @@ export async function drawShare(canvas, { text, author, source }, shape) {
   const blockH = lines.length * lh + gap + attrH;
   let y = boxTop + Math.max(0, (boxBottom - boxTop - blockH) / 2);
   ctx.fillStyle = "#F5EDE6"; ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.direction = rtl ? "rtl" : "ltr";
   ctx.font = `${size}px ${serif}`;
   for (const l of lines) { ctx.fillText(l, W / 2, y); y += lh; }
   y += gap;
+  ctx.direction = "ltr";
   ctx.fillStyle = "#FFB98A"; ctx.font = `600 ${authorPx}px ${sans}`;
   ctx.fillText(`— ${author || "The Bahá’í Writings"}`, W / 2, y);
   y += authorPx * 1.3 + 14;
@@ -101,7 +103,7 @@ export function ShareImage({ r, text, onClose }) {
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useState(null);
   const canvas = useRef(null);
-  const data = { text: text || r.excerpt || r.text, author: r.author, source: [r.book, r.section && r.section !== r.book ? r.section : ""].filter(Boolean).join(", ") };
+  const data = { rtl: !!r.rtl, text: text || r.excerpt || r.text, author: r.author, source: [r.book, r.section && r.section !== r.book ? r.section : ""].filter(Boolean).join(", ") };
   useEffect(() => {
     let alive = true;
     const c = canvas.current || (canvas.current = document.createElement("canvas"));
