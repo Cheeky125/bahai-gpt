@@ -1,0 +1,17 @@
+name: checks
+# Runs Phoenix's own checks on every change to main and on every pull request.
+# A red ✗ next to a commit on GitHub means one of them failed: open it to see which question or answer.
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node scripts/test_facts.mjs
+      - run: node scripts/test_answers.mjs
+      - run: node scripts/test_obligatory.mjs
