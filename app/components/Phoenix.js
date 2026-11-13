@@ -348,7 +348,7 @@ export function Footer() {
     <footer className="footer">
       <div style={{ marginBottom: 12 }}><Feedback /></div>
       An independent study tool, not an official publication of any Bahá’í institution.
-      Texts from the <a href="https://www.bahai.org/library/" target="_blank" rel="noopener noreferrer">Bahá’í Reference Library</a>. · <a href="/institute">Institute companion</a> · <a href="/about">About Phoenix</a>
+      Texts © Bahá’í International Community, from the <a href="https://www.bahai.org/library/" target="_blank" rel="noopener noreferrer">Bahá’í Reference Library</a>. · <a href="/institute">Institute companion</a> · <a href="/about">About Phoenix</a> · <a href="/privacy">Privacy</a>
     </footer>
     <BottomNav />
     </>
