@@ -62,6 +62,32 @@ export function StreakChip() {
   );
 }
 
+// Home page tile: the fiery number, and a one-tap "said today" for the short or long prayer.
+export function StreakTile() {
+  const [st, setSt, today] = useStreak();
+  if (!st || !today) return <div className="tile" aria-hidden="true" />;
+  const { cur } = streaks(st.days, today);
+  const lit = done(st.days[today]);
+  const choice = st.choice || "short";
+  const used = Object.keys(st.days).length > 0;
+  const markToday = () => {
+    track("prayer_marked", `${NAMES[choice]} (home)`);
+    const n = { ...st, days: { ...st.days, [today]: { ...(st.days[today] || {}), [choice]: Date.now() } } };
+    save(n); setSt(n);
+  };
+  return (
+    <div className={`tile${lit ? " lit" : ""}`}>
+      <a href="/obligatory" className="tilelink" aria-label={`Prayer streak: ${cur} day${cur === 1 ? "" : "s"}`}>
+        <FireBadge n={cur} lit={lit} size={40} />
+        <span className="t1">{!used ? "Prayer streak" : `${cur}-day streak`}</span>
+      </a>
+      {lit ? <span className="t2">Said today</span>
+        : choice !== "medium" ? <button className="t2 tilebtn" onClick={markToday}>✓ I’ve said it today</button>
+        : <a className="t2" href="/obligatory">Mark today</a>}
+    </div>
+  );
+}
+
 export default function StreakCard() {
   const [st, setSt, today] = useStreak();
   if (!st || !today) return null;

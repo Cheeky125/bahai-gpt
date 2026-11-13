@@ -5,9 +5,9 @@ import Install from "./Install";
 import Feedback from "./Feedback";
 import { FavButton, SavedLink } from "./Saved";
 import { ShareButton } from "./Share";
-import { QiblihLauncher } from "./Qiblih";
+import { QiblihTile } from "./Qiblih";
 import { useVideos, ListenToggle, Player } from "./Listen";
-import StreakCard from "./Streak";
+import { StreakTile } from "./Streak";
 import { badiDate, badiString, upcoming, ymd, daysBetween } from "../lib/badi";
 import { track } from "../lib/track";
 
@@ -110,6 +110,7 @@ export default function Phoenix() {
   const [author, setAuthor] = useState("");
   const [state, setState] = useState({ status: "idle", results: [], error: null, query: "" });
   const [shown, setShown] = useState(6);
+  const [showAuthors, setShowAuthors] = useState(false);
   const inputRef = useRef(null);
 
   const run = async (query, who = author, push = true) => {
@@ -169,10 +170,10 @@ export default function Phoenix() {
           <button className="brand" onClick={home}><Logo id="h" />Phoenix</button>
           <nav className="nav"><Install /><a href="/today">Today</a><a href="/prayers">Prayers</a><a href="/institute">Ruhi</a><a href="/about">About</a><SavedLink /><ThemeToggle /></nav>
         </header>
-        <main className="hero">
-          <Logo size={128} glow id="hero" />
+        <main className="hero compact">
+          <Logo size={76} glow id="hero" />
           <h1>Search the Bahá’í Writings</h1>
-          <p>Ask about any theme. Every passage is shown word for word, with its exact source.</p>
+          <p>Every passage word for word, with its exact source.</p>
           <form className="search" onSubmit={submit} role="search">
             <label htmlFor="q" className="sr">Search the Writings</label>
             <div className="searchbox">
@@ -180,18 +181,23 @@ export default function Phoenix() {
               <input id="q" ref={inputRef} value={q} onChange={(e) => setQ(e.target.value)} placeholder="e.g. What do the Writings say about education?" autoComplete="off" maxLength={300} />
               <button className="go" type="submit" aria-label="Search"><Arrow /></button>
             </div>
-            {chips}
+            {showAuthors ? chips : (
+              <div className="chips">
+                <button type="button" className="chip" aria-pressed={!!author} aria-expanded="false" onClick={() => setShowAuthors(true)}>
+                  {(AUTHORS.find(([v]) => v === author) || AUTHORS[0])[1]} ▾
+                </button>
+              </div>
+            )}
           </form>
-          <TodayStrip />
-          <StreakCard />
-          <QiblihLauncher />
-          <FeatureCards />
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-            <div className="label">Try a theme</div>
-            <div className="themes">
-              {THEMES.map((t) => <button key={t} className="theme" onClick={() => run(t)}>{t}</button>)}
-            </div>
+          <div className="themes" aria-label="Try a theme">
+            {THEMES.map((t) => <button key={t} className="theme" onClick={() => run(t)}>{t}</button>)}
           </div>
+          <div className="tiles">
+            <TodayTile />
+            <StreakTile />
+            <QiblihTile />
+          </div>
+          <FeatureGrid />
         </main>
         <Footer />
       </>
@@ -288,6 +294,25 @@ function TodayStrip() {
   );
 }
 
+function TodayTile() {
+  const [s, setS] = useState(null);
+  useEffect(() => {
+    const n = new Date(), t = ymd(n.getFullYear(), n.getMonth() + 1, n.getDate());
+    const b = badiDate(t);
+    if (!b) return;
+    const e = upcoming(t, 3).find((x) => x.kind !== "fast");
+    const d = e ? daysBetween(t, e.date) : null;
+    setS({ day: `${b.day} ${b.monthName}`, full: badiString(b), next: e ? `${e.name} ${d === 0 ? "today" : d === 1 ? "tomorrow" : `in ${d} days`}` : "" });
+  }, []);
+  return (
+    <a className="tile today" href="/today" data-track="today_card" aria-label={s ? `${s.full}. Today’s reading` : "Today’s reading"}>
+      <span className="fic"><Icon name="today" /></span>
+      <span className="t1">{s ? s.day : "Today"}</span>
+      <span className="t2">{s && s.next ? s.next : "Today’s reading"}</span>
+    </a>
+  );
+}
+
 const FEATURES = [
   { icon: "prayers", title: "Prayers", text: "Nearly 500 prayers in full, by theme — healing, the departed, children, tests…", href: "/prayers" },
   { icon: "devotional", title: "Build a devotional", text: "Pick a theme; get prayers, readings, a story and a song, ready to share.", href: "/prayers?tab=devotional" },
@@ -296,6 +321,20 @@ const FEATURES = [
   { icon: "prayers", title: "Obligatory prayer", text: "The three prayers, today’s times, the Qiblih compass and your streak.", href: "/obligatory" },
   { icon: "read", title: "Read side by side", text: "The Hidden Words, Gleanings, the Aqdas and Prayers and Meditations in two languages — even the original.", href: "/read" },
 ];
+// Home page: the features as a compact grid of names.
+export function FeatureGrid() {
+  return (
+    <nav className="fgrid" aria-label="More in Phoenix">
+      {FEATURES.map((f) => (
+        <a key={f.title} className="fcell" href={f.href} title={f.text}>
+          <span className="fic"><Icon name={f.icon} /></span>
+          <span>{f.title}</span>
+        </a>
+      ))}
+    </nav>
+  );
+}
+
 export function FeatureCards() {
   return (
     <nav className="features" aria-label="More in Phoenix">

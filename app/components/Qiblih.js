@@ -183,6 +183,25 @@ export function Finder({ place, setPlace, perm, onClose }) {
 
 
 // Home page: a one-tap button that opens the compass
+// Home page tile: opens the compass straight away, like the launcher below.
+export function QiblihTile() {
+  const [place, setPlaceState] = useState(null);
+  const [finder, setFinder] = useState(null);
+  useEffect(() => { setPlaceState(getPlace()); }, []);
+  const setPlace = (p) => { setPlaceStore(p); setPlaceState(p); };
+  const b = place ? bearingTo(place.lat, place.lon) : null;
+  return (
+    <>
+      <button className="tile" data-track="compass_open|home" onClick={() => setFinder(askCompass())}>
+        <span className="fic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="m15.5 8.5-2 5-5 2 2-5 5-2Z" /></svg></span>
+        <span className="t1">Qiblih</span>
+        <span className="t2">{b != null ? `${Math.round(b)}° ${pointName(b)}` : "Open the compass"}</span>
+      </button>
+      {finder && <Finder place={place} setPlace={setPlace} perm={finder} onClose={() => setFinder(null)} />}
+    </>
+  );
+}
+
 export function QiblihLauncher() {
   const [place, setPlaceState] = useState(null);
   const [finder, setFinder] = useState(null);
