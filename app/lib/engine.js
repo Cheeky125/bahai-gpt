@@ -133,8 +133,8 @@ export async function claude(system, user, maxTokens = 400, req = null) {
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    // temperature 0: the same question gets the same wording and the same results every time
-    body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, temperature: 0, system, messages: [{ role: "user", content: user }] }),
+    // (no temperature setting: this model rejects it. Steady results come from remembering each question's wording, below.)
+    body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, system, messages: [{ role: "user", content: user }] }),
   });
   if (!r.ok) { console.error("claude", r.status, (await r.text()).slice(0, 300)); return null; }
   const j = await r.json();
