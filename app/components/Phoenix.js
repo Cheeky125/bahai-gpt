@@ -294,7 +294,7 @@ const FEATURES = [
   { icon: "stories", title: "Stories & songs", text: "The Dawn-Breakers, Memorials of the Faithful, and 300+ songs to sing.", href: "/prayers?tab=stories" },
   { icon: "ruhi", title: "Ruhi companion", text: "Every quote in each unit of Books 1–8, section by section.", href: "/institute" },
   { icon: "prayers", title: "Obligatory prayer", text: "The three prayers, today’s times, the Qiblih compass and your streak.", href: "/obligatory" },
-  { icon: "read", title: "Read side by side", text: "The Hidden Words, Aqdas, Íqán and more in two languages — even the original.", href: "/read" },
+  { icon: "read", title: "Read side by side", text: "The Hidden Words, Gleanings, the Aqdas and Prayers and Meditations in two languages — even the original.", href: "/read" },
 ];
 export function FeatureCards() {
   return (
