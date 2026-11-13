@@ -1,6 +1,7 @@
 // Phoenix — read a book in two languages side by side (BahaiPrayers.net).
 // GET → the books and the languages each has. GET ?book=hidden&a=1&b=5 → { items: [{ n, a, b }], … }
 import { bp, cleanHtml } from "../../lib/bp";
+import ENGLISH from "../../lib/bilingual_english.json";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -13,6 +14,21 @@ const BOOKS = {
   aqdas: { title: "The Kitáb-i-Aqdas", by: "Bahá’u’lláh", langs: "AqdasLanguages", matrix: "AqdasMatrixByLanguages", original: 6 },
   pm: { title: "Prayers and Meditations", by: "Bahá’u’lláh", langs: "PMLanguages", matrix: "PMsMatrixByLanguages", original: 4 },
 };
+// English (language 1 on BahaiPrayers.net) is shown from Phoenix's own text, taken from the official
+// bahai.org editions, so it matches the rest of the site word for word. Their English differs in places.
+const EN = 1;
+const esc = (t) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+function ourEnglish(book, items, a, b) {
+  const T = ENGLISH[book] || {};
+  for (const it of items) {
+    const ours = T[String(it.n)];
+    if (!ours) continue;
+    const html = ours.map((t) => `<p>${esc(t)}</p>`).join("");
+    if (a === EN) it.a = html;
+    if (b === EN) it.b = html;
+  }
+  return items;
+}
 const CACHE = { headers: { "Cache-Control": "public, max-age=600, s-maxage=86400, stale-while-revalidate=86400" } };
 
 export async function GET(req) {
@@ -33,7 +49,7 @@ export async function GET(req) {
     if (rows && rows.Aqdas1 && rows.Aqdas2) {
       // the Aqdas comes as two books: pair the paragraphs by their numbers
       const two = new Map((rows.Aqdas2.Paragraphs || []).map((p) => [p.Number, p.Text]));
-      items = (rows.Aqdas1.Paragraphs || []).map((p) => ({ n: `¶${p.Number}`, a: cleanHtml(p.Text), b: cleanHtml(two.get(p.Number)) }));
+      items = ourEnglish(p.get("book"), (rows.Aqdas1.Paragraphs || []).map((p) => ({ n: `¶${p.Number}`, a: cleanHtml(p.Text), b: cleanHtml(two.get(p.Number)) })), a, b);
       return Response.json({ book: B.title, nameA: rows.LanguageName1 || "", nameB: rows.LanguageName2 || "", rtlA: rows.IsLeftToRight1 === false, rtlB: rows.IsLeftToRight2 === false, items }, CACHE);
     }
     if (!Array.isArray(rows)) throw new Error("No rows");
@@ -41,6 +57,7 @@ export async function GET(req) {
       .filter((r) => r.a || r.b)
       // their notes and references at the very end are not part of the text
       .filter((r) => !/^<h3>Notes and References|^<h3>Footnotes/i.test(r.a));
+    ourEnglish(p.get("book"), items, a, b);
     const f = rows[0] || {};
     return Response.json({ book: B.title, nameA: f.LanguageName1 || "", nameB: f.LanguageName2 || "", rtlA: f.IsLeftToRight1 === false, rtlB: f.IsLeftToRight2 === false, items }, CACHE);
   } catch (e) {
