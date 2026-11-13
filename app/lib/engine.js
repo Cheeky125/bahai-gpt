@@ -83,20 +83,53 @@ export async function rankSongs(queryVec, allLanguages = false) {
 }
 
 // ---------- rate limit ----------
+const ipOf = (req) => req?.headers?.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
 const hits = new Map();
 export function rateLimited(req, limit = 30) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+  const ip = ipOf(req);
   const now = Date.now();
+  if (hits.size > 5000) for (const [k, v] of hits) if (!v.length || now - v[v.length - 1] > 60_000) hits.delete(k); // forget idle visitors
   const recent = (hits.get(ip) || []).filter((t) => now - t < 60_000);
   recent.push(now);
   hits.set(ip, recent);
   return recent.length > limit;
 }
 
+// ---------- AI spending ceiling ----------
+// Every call to Claude costs money, so two ceilings sit in front of it (counted in memory on each server):
+//   - the whole site: AI_DAILY_LIMIT calls per day (UTC)
+//   - one visitor (one network address): AI_VISITOR_HOURLY calls per hour
+// When either is used up, claude() returns nothing and costs nothing: searches carry on as plain
+// searches (no re-wording, no Quick answer) until the hour or day rolls over.
+// The firm guarantee is the monthly spend limit in the Claude Console; this keeps a bad day small.
+const intEnv = (name, dflt) => { const n = parseInt(process.env[name], 10); return Number.isFinite(n) && n >= 0 ? n : dflt; };
+const AI_DAILY_LIMIT = intEnv("AI_DAILY_LIMIT", 3000);
+const AI_VISITOR_HOURLY = intEnv("AI_VISITOR_HOURLY", 300);
+const aiDay = { key: "", n: 0, warned: false };
+const aiVisitors = new Map();
+export function aiAllowed(req) {
+  const now = Date.now();
+  const day = new Date(now).toISOString().slice(0, 10);
+  if (aiDay.key !== day) { aiDay.key = day; aiDay.n = 0; aiDay.warned = false; aiVisitors.clear(); }
+  if (aiDay.n >= AI_DAILY_LIMIT) {
+    if (!aiDay.warned) { aiDay.warned = true; console.error(`AI daily ceiling reached (${AI_DAILY_LIMIT} calls) — plain search until tomorrow`); }
+    return false;
+  }
+  const ip = ipOf(req);
+  const recent = (aiVisitors.get(ip) || []).filter((t) => now - t < 3_600_000);
+  if (recent.length >= AI_VISITOR_HOURLY) { aiVisitors.set(ip, recent); return false; }
+  recent.push(now);
+  aiVisitors.set(ip, recent);
+  aiDay.n++;
+  return true;
+}
+
 // ---------- Claude ----------
-export async function claude(system, user, maxTokens = 400) {
+// Pass the visitor's request as `req` so the call is counted against the ceilings above.
+export async function claude(system, user, maxTokens = 400, req = null) {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return null;
+  if (!aiAllowed(req)) return null;
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
@@ -120,9 +153,9 @@ const PLAN_SYSTEM = `You help search a database of paragraphs from the Bahá'í 
  "prayers_only": true | false}
 type "fact" = a question with a short factual answer (who, when, where, how old, how many, what is X). "quote" = the user is looking for a known phrase. "prayer" = the user wants a prayer. "topic" = anything else. prayers_only is true only when they ask for a prayer.`;
 
-export async function plan(q) {
+export async function plan(q, req = null) {
   const fallback = { type: /\bprayers?\b/i.test(q) ? "prayer" : "topic", queries: [], prayers_only: /\bprayers?\b/i.test(q) };
-  const out = parseJson(await claude(PLAN_SYSTEM, q, 1500));
+  const out = parseJson(await claude(PLAN_SYSTEM, q, 1500, req));
   if (!out) return fallback;
   return {
     type: ["fact", "topic", "prayer", "quote"].includes(out.type) ? out.type : "topic",

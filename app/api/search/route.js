@@ -32,10 +32,10 @@ const ANSWER_SYSTEM = `You answer short factual questions about the Bahá'í Fai
 - When useful, quote a few exact words from a passage in quotation marks.
 - If the passages do not contain the answer, reply exactly: NONE`;
 
-async function answer(q, results) {
+async function answer(q, results, req) {
   if (!results.length) return null;
   const ctx = results.slice(0, 8).map((r, i) => `[${i + 1}] ${r.author || "Compilation"}, ${r.book}${r.section ? ", " + r.section : ""}:\n${r.text.slice(0, 1500)}`).join("\n\n");
-  const out = await claude(ANSWER_SYSTEM, `Question: ${q}\n\nPassages:\n${ctx}`, 2000);
+  const out = await claude(ANSWER_SYSTEM, `Question: ${q}\n\nPassages:\n${ctx}`, 2000, req);
   if (!out || /^NONE\b/.test(out)) return null;
   return out;
 }
@@ -53,7 +53,7 @@ export async function POST(req) {
     const rb = !forceKind && ruhiBookIn(q);
     if (rb) {
       const topic = rb.rest.length >= 2 ? rb.rest : (RUHI_UNITS[rb.book] || []).join(" ");
-      const p = await plan(topic);
+      const p = await plan(topic, req);
       const wordings = [topic, ...p.queries.filter((x) => x.toLowerCase() !== topic.toLowerCase())].slice(0, 3);
       const embs = await embed(wordings);
       const lists = await Promise.all(wordings.map((w, i) => search(w, embs[i], author, null, 50)));
@@ -76,7 +76,7 @@ export async function POST(req) {
       }
     }
 
-    const p = await plan(q);
+    const p = await plan(q, req);
     const wordings = [q, ...p.queries.filter((x) => x.toLowerCase() !== q.toLowerCase())].slice(0, 3);
     const embs = await embed(wordings);
     const kind = forceKind || (p.prayers_only ? "prayers" : null);
@@ -85,7 +85,7 @@ export async function POST(req) {
       lists = await Promise.all(wordings.map((w, i) => search(w, embs[i], author, null, 20)));
     }
     const results = shapeAll(merge(lists)).slice(0, 12);
-    const quick = p.type === "fact" && !forceKind ? await answer(q, results) : null;
+    const quick = p.type === "fact" && !forceKind ? await answer(q, results, req) : null;
     return Response.json({ results, answer: quick, type: forceKind ? "prayer" : p.type });
   } catch (e) {
     console.error(e);

@@ -61,7 +61,7 @@ export async function POST(req) {
     if (Object.values(counts).every((v) => v === 0)) return Response.json({ error: "Choose at least one prayer, reading, story or song." }, { status: 400 });
     if (theme.length < 2) return Response.json({ error: "Choose a theme first." }, { status: 400 });
 
-    const p = await plan(theme);
+    const p = await plan(theme, req);
     const wordings = [theme, ...p.queries.filter((x) => x.toLowerCase() !== theme.toLowerCase())].slice(0, 3);
     const embs = await embed(wordings);
     const none = async () => [];
