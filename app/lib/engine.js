@@ -3,6 +3,8 @@ import PRAYERS from "./prayers.json";
 import MEMORIALS from "./stories.json";
 import DAWN from "./dawnbreakers.json";
 import SONGS from "./songs.json";
+import PRE_VECTORS from "./doc_vectors.json";   // made by tools/embed_docs.mjs
+import { createHash } from "crypto";
 import RUHI from "./ruhi.json";
 import HIDDEN_IDS from "./hidden.json";
 
@@ -41,8 +43,20 @@ export function storyCard(st) {
 
 // Meaning fingerprints for stories and songs are computed once per server and kept in memory.
 const vecCache = new Map();
+// Pre-computed vectors (see tools/embed_docs.mjs) are used when they were made from exactly these texts;
+// otherwise the server embeds the texts itself, once per wake-up.
+function preVectors(key, texts) {
+  const pre = PRE_VECTORS && PRE_VECTORS[key];
+  if (!pre || pre.count !== texts.length) return null;
+  const hash = createHash("sha256").update(texts.join("\u0000")).digest("hex").slice(0, 16);
+  if (hash !== pre.hash) return null;
+  const buf = Buffer.from(pre.data, "base64"), b = new Int8Array(buf.buffer, buf.byteOffset, buf.length);
+  return pre.scales.map((sc, k) => Float32Array.from(b.subarray(k * pre.dim, (k + 1) * pre.dim), (x) => x * sc));
+}
 function docVectors(key, texts) {
   if (!vecCache.has(key)) {
+    const pre = preVectors(key, texts);
+    if (pre) { vecCache.set(key, Promise.resolve(pre)); return vecCache.get(key); }
     const p = (async () => {
       const batches = [];
       for (let i = 0; i < texts.length; i += 96) batches.push(texts.slice(i, i + 96));

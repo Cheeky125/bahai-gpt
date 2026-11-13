@@ -1,0 +1,17 @@
+name: library-update
+on:
+  push:
+    branches: [library-update-run]
+    paths: [tools/library/run_now.txt]
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install requests
+      - run: python3 tools/library/run_update_ci.py
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
