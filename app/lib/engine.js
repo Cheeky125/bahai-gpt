@@ -133,7 +133,8 @@ export async function claude(system, user, maxTokens = 400, req = null) {
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, system, messages: [{ role: "user", content: user }] }),
+    // temperature 0: the same question gets the same wording and the same results every time
+    body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, temperature: 0, system, messages: [{ role: "user", content: user }] }),
   });
   if (!r.ok) { console.error("claude", r.status, (await r.text()).slice(0, 300)); return null; }
   const j = await r.json();
@@ -153,15 +154,23 @@ const PLAN_SYSTEM = `You help search a database of paragraphs from the Bahá'í 
  "prayers_only": true | false}
 type "fact" = a question with a short factual answer (who, when, where, how old, how many, what is X). "quote" = the user is looking for a known phrase. "prayer" = the user wants a prayer. "topic" = anything else. prayers_only is true only when they ask for a prayer.`;
 
+// Repeat questions are remembered for a day (on each server), so they cost nothing the second time.
+const planCache = new Map();
 export async function plan(q, req = null) {
   const fallback = { type: /\bprayers?\b/i.test(q) ? "prayer" : "topic", queries: [], prayers_only: /\bprayers?\b/i.test(q) };
+  const key = q.trim().toLowerCase().replace(/\s+/g, " ");
+  const hit = planCache.get(key);
+  if (hit && Date.now() - hit.at < 86_400_000) return hit.p;
   const out = parseJson(await claude(PLAN_SYSTEM, q, 1500, req));
   if (!out) return fallback;
-  return {
+  const p = {
     type: ["fact", "topic", "prayer", "quote"].includes(out.type) ? out.type : "topic",
     queries: Array.isArray(out.queries) ? out.queries.filter((x) => typeof x === "string" && x.trim()).slice(0, 3) : [],
     prayers_only: !!out.prayers_only,
   };
+  if (planCache.size >= 1000) planCache.delete(planCache.keys().next().value);
+  planCache.set(key, { p, at: Date.now() });
+  return p;
 }
 
 // ---------- Voyage + Supabase ----------
