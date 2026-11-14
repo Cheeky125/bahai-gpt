@@ -1,11 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import Logo from "./Logo";
-import Install from "./Install";
-import { Card, ThemeToggle, Footer, Glass, Arrow } from "./Phoenix";
-import { SavedLink } from "./Saved";
+import { Card, Footer, Glass, Arrow } from "./Phoenix";
 import IntlPrayers, { LanguagePicker, loadLanguages } from "./IntlPrayers";
 import { track } from "../lib/track";
+import SiteNav from "./SiteNav";
 
 const DEVO_THEMES = ["Unity", "Service", "Detachment", "Hope", "Gratitude", "Justice", "Healing", "Love of God", "Tests and difficulties", "Children and youth"];
 
@@ -13,7 +12,7 @@ function Header() {
   return (
     <header className="header bar">
       <a className="brand" href="/" style={{ textDecoration: "none" }}><Logo id="hp" />Phoenix</a>
-      <nav className="nav"><Install /><a href="/">Search</a><a href="/today">Today</a><a href="/about">About</a><SavedLink /><ThemeToggle /></nav>
+      <SiteNav />
     </header>
   );
 }
@@ -264,18 +263,14 @@ export default function Prayers({ groups }) {
       <Header />
       <main className="ptop">
         <h1>Prayers, Stories &amp; Songs</h1>
-        <p>Nearly 500 prayers, each shown in full, word for word — and prayers in over 100 other languages. Stories of the early believers from ‘Abdu’l-Bahá and from <em>The Dawn-Breakers</em>. Over 300 songs to sing together. Or build a whole devotional on any theme in one tap.</p>
+        <p>Nearly 500 prayers in full, by theme — and in 100+ languages.</p>
         <div className="tabs" role="tablist" aria-label="Prayers or devotional">
           <button className="tab" role="tab" aria-selected={tab === "browse"} onClick={() => { setTab("browse"); if (!theme && found.status === "idle") setParams({}); }}>Prayers</button>
           <button className="tab" role="tab" aria-selected={tab === "stories"} onClick={() => openStories()}>Stories</button>
           <button className="tab" role="tab" aria-selected={tab === "songs"} onClick={() => openSongs()}>Songs</button>
           <button className="tab" role="tab" aria-selected={tab === "devotional"} onClick={() => { setTab("devotional"); if (devo.status === "idle") setParams({ tab: "devotional" }); }}>Devotional</button>
         </div>
-        <a className="continue" href="/obligatory" style={{ marginTop: 4 }}>
-          <span className="label">Obligatory prayer</span>
-          <span>The three prayers, today’s times, the Qiblih compass and your streak</span>
-          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m13 6 6 6-6 6" /></svg>
-        </a>
+        <a className="slimlink" href="/obligatory">Obligatory prayer · times · Qiblih compass <Arrow /></a>
       </main>
 
       {tab === "browse" && lang !== "en" && (
@@ -287,6 +282,7 @@ export default function Prayers({ groups }) {
 
       {tab === "browse" && lang === "en" && (
         <section className="results" aria-live="polite">
+          <div className="langsearch">
           <LanguagePicker value={lang} onChange={setLang} />
           <form className="search" role="search" onSubmit={(e) => { e.preventDefault(); findPrayer(q); }} style={{ maxWidth: "none" }}>
             <label htmlFor="pq" className="sr">Find a prayer</label>
@@ -296,6 +292,7 @@ export default function Prayers({ groups }) {
               <button className="go" type="submit" aria-label="Find a prayer" disabled={found.status === "loading"}><Arrow /></button>
             </div>
           </form>
+          </div>
 
           {(theme || found.status !== "idle") && <button className="back" onClick={backToThemes}>← All themes</button>}
 

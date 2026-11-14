@@ -1,15 +1,15 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Logo from "./Logo";
-import Install from "./Install";
 import Feedback from "./Feedback";
-import { FavButton, SavedLink } from "./Saved";
+import { FavButton } from "./Saved";
 import { ShareButton } from "./Share";
 import { QiblihTile } from "./Qiblih";
 import { useVideos, ListenToggle, Player } from "./Listen";
 import { StreakTile } from "./Streak";
 import { badiDate, badiString, upcoming, ymd, daysBetween } from "../lib/badi";
 import { track } from "../lib/track";
+import SiteNav from "./SiteNav";
 
 const AUTHORS = [
   ["", "All authors"],
@@ -168,7 +168,7 @@ export default function Phoenix() {
       <>
         <header className="header">
           <button className="brand" onClick={home}><Logo id="h" />Phoenix</button>
-          <nav className="nav"><Install /><a href="/today">Today</a><a href="/prayers">Prayers</a><a href="/institute">Ruhi</a><a href="/about">About</a><SavedLink /><ThemeToggle /></nav>
+          <SiteNav />
         </header>
         <main className="hero compact">
           <Logo size={76} glow id="hero" />
@@ -217,7 +217,7 @@ export default function Phoenix() {
             <button className="go" type="submit" aria-label="Search" disabled={status === "loading"}><Arrow /></button>
           </div>
         </form>
-        <nav className="nav"><Install /><a href="/today">Today</a><a href="/prayers">Prayers</a><a href="/institute">Ruhi</a><a href="/about">About</a><SavedLink /><ThemeToggle /></nav>
+        <SiteNav />
       </header>
       <main className="results" aria-live="polite">
         {chips}

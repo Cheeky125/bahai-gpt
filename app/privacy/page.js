@@ -1,5 +1,6 @@
 import Logo from "../components/Logo";
 import { BottomNav } from "../components/Phoenix";
+import SiteNav from "../components/SiteNav";
 
 export const metadata = { title: "Privacy — Phoenix" };
 
@@ -8,7 +9,7 @@ export default function Privacy() {
     <>
       <header className="header bar">
         <a className="brand" href="/" style={{ textDecoration: "none" }}><Logo id="pv" />Phoenix</a>
-        <nav className="nav"><a href="/">Search</a><a href="/today">Today</a><a href="/prayers">Prayers</a></nav>
+        <SiteNav />
       </header>
       <main className="page">
         <h1>Privacy</h1>

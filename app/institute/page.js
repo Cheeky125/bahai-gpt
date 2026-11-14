@@ -1,9 +1,8 @@
 import Logo from "../components/Logo";
-import Install from "../components/Install";
 import RuhiStudy from "../components/RuhiStudy";
-import { ThemeToggle, Footer } from "../components/Phoenix";
+import { Footer } from "../components/Phoenix";
 import { ruhiQuoteCount } from "../lib/engine";
-import { SavedLink } from "../components/Saved";
+import SiteNav from "../components/SiteNav";
 
 export const metadata = {
   title: "Ruhi Institute — Phoenix",
@@ -88,7 +87,7 @@ export default function Institute() {
     <>
       <header className="header bar">
         <a className="brand" href="/" style={{ textDecoration: "none" }}><Logo id="in" />Phoenix</a>
-        <nav className="nav"><Install /><a href="/">Search</a><a href="/today">Today</a><a href="/prayers">Prayers</a><SavedLink /><ThemeToggle /></nav>
+        <SiteNav />
       </header>
       <main className="ptop" style={{ paddingBottom: 64 }}>
         <RuhiStudy books={books} later={LATER} />
