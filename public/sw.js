@@ -9,7 +9,7 @@
 // Search, AI answers and anything that sends data (POST) always need the internet.
 //
 // When you change this file, bump VERSION so phones pick up the new version.
-const VERSION = "v2";
+const VERSION = "v3";
 const STATIC = `phoenix-static-${VERSION}`;
 const PAGES = `phoenix-pages-${VERSION}`;
 const OFFLINE = "/offline.html";
@@ -36,7 +36,7 @@ self.addEventListener("activate", (e) => {
   })());
 });
 
-const NEVER = /^\/(api\/(search|event|feedback|geocode|keepalive|listen)|stats)/;
+const NEVER = /^\/(api\/(search|event|feedback|geocode|keepalive|listen|transfer)|stats)/;
 
 self.addEventListener("fetch", (e) => {
   const req = e.request;

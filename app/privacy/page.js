@@ -15,7 +15,9 @@ export default function Privacy() {
         <h1>Privacy</h1>
         <p>Phoenix has no accounts and asks for no names, emails or passwords.</p>
         <h2 className="serif">Kept only on your device</h2>
-        <p>Your saved passages, your prayer streak, your Ruhi progress, your place (for prayer times and the Qiblih), your language and theme are stored in your own browser. They never leave your device, and clearing your browser’s site data removes them.</p>
+        <p>Your saved passages, your prayer streak, your Ruhi progress, your place (for prayer times and the Qiblih), your language and theme are stored in your own browser. They never leave your device unless you choose “Move to another phone” on the Saved page, and clearing your browser’s site data removes them.</p>
+        <h2 className="serif">Moving to another phone</h2>
+        <p>If you make a transfer code, a copy of those items is kept on our database for at most 24 hours so your other device can fetch it. It is deleted as soon as the code is used, or after 24 hours if it never is. The copy has no name or email attached.</p>
         <h2 className="serif">What is sent to other services</h2>
         <p><strong>Searches.</strong> What you type is sent to Anthropic (Claude), to reword the question and sometimes write a short answer, and to Voyage AI, to search by meaning. Phoenix does not store your searches.</p>
         <p><strong>Your city.</strong> If you type a city instead of using your location, its name is looked up with Open-Meteo’s free place finder.</p>

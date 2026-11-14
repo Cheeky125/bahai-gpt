@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Card } from "./Phoenix";
 import { useSaved } from "./Saved";
+import Transfer from "./Transfer";
 
 const FILTERS = [["all", "All"], ["prayers", "Prayers"], ["writings", "Passages"], ["stories", "Stories"]];
 const kindOf = (r) => (r.prayer ? "prayers" : r.story ? "stories" : "writings");
@@ -29,6 +30,7 @@ export default function SavedList() {
         </div>
       )}
       {shown.map((r) => <Card key={r.id} r={r} />)}
+      <Transfer />
     </>
   );
 }
