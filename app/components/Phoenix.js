@@ -132,7 +132,8 @@ export default function Phoenix() {
       track("search", j.type || "topic");
       setState({ status: "done", results: j.results || [], answer: j.answer || null, verified: !!j.verified, ruhiBook: j.ruhiBook || null, error: null, query: text });
     } catch (e) {
-      setState({ status: "error", results: [], error: e.message, query: text });
+      const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+      setState({ status: "error", results: [], error: offline ? "You’re offline. Searching needs the internet, but the prayers and pages you’ve opened still work." : e.message, query: text });
     }
   };
 

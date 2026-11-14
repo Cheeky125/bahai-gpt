@@ -16,6 +16,9 @@ export default function Install() {
     const onPrompt = (e) => { e.preventDefault(); setPrompt(e); };
     const onInstalled = () => { setInstalled(true); setPrompt(null); };
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+    // Ask the browser to keep Phoenix's saved items even when the phone is low on space
+    // (and, on iPhone, not to clear them after a week without visits). It may say no; nothing breaks.
+    try { navigator.storage?.persist?.().catch(() => {}); } catch (e) {}
     window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
     return () => { window.removeEventListener("beforeinstallprompt", onPrompt); window.removeEventListener("appinstalled", onInstalled); };
